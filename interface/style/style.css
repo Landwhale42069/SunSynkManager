@@ -1,0 +1,46 @@
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+  color: white; }
+
+html {
+  font-size: 62.5%; }
+
+body {
+  width: 95vw;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background-color: #0A2647; }
+
+.heading {
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 4rem; }
+
+.statblock {
+  margin: 3rem 0;
+  width: 100%;
+  background-image: linear-gradient(to right bottom, rgba(32, 82, 149, 0.8), rgba(20, 66, 114, 0.8));
+  transition: all 0.3s; }
+  .statblock:hover {
+    transform: scale(1.05); }
+
+.device, .register {
+  background-color: grey;
+  padding: 1.2rem; }
+  .device h2, .register h2 {
+    font-size: 3rem; }
+
+.row .col {
+  display: inline-block; }
+
+.btn {
+  font-size: 2rem;
+  background-color: #2C74B3;
+  padding: 1rem;
+  border-radius: .5rem; }
+  .btn.btn--primary {
+    font-size: 3rem; }

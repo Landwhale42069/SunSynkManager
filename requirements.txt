@@ -1,0 +1,4 @@
+requests
+minimalmodbus
+pandas
+flask
