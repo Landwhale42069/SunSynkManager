@@ -37,6 +37,8 @@ class WebAPI:
             return send_file(main_js)
 
     def startup(self):
-        x = threading.Thread(target=self.app.run)
+        x = threading.Thread(target=self.app.run, kwargs={
+            'host': "0.0.0.0"
+        })
         x.start()
 

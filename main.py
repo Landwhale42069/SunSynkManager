@@ -37,8 +37,6 @@ def main():
     # a = Schedular.IntervalTask(5, _print, ["something"])
 
     argument_dict = {
-        'logger': logger,
-
         'loadshedding': loadshedding,
 
         'dryer': dryer,
@@ -54,8 +52,9 @@ def main():
 
 
 def f01_dryer_watchdog(state):
+    logger = Logger.Logger('f01_dryer_watchdog')
+
     loadshedding = state.get('loadshedding')
-    logger = state.get('logger')
     loadshedding_ends = state.get('loadshedding_ends')
     grid_status = state.get('grid_status')
     dryer = state.get('dryer')
