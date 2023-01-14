@@ -1,4 +1,4 @@
-from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface
+from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
 
 import time
 from datetime import datetime, timedelta
@@ -55,6 +55,10 @@ def main():
             time.sleep(time_between_checks)
     except Exception as e:
         logger.error(f"Something went wrong, {e}")
+
+
+def print_something(something):
+    print(something)
 
 
 def f01_dryer_watchdog(state):
