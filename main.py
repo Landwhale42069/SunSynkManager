@@ -13,6 +13,8 @@ def main():
     Interface.WebAPI.logger = logger
 
     web_interface = Interface.WebAPI("interface")
+    web_interface.startup()
+
     loadshedding = Loadshedding.Tracker("schedule.csv")
 
     # Define devices
@@ -32,33 +34,23 @@ def main():
     # pv2_power = Inverter.Register(187, "PV2 power", -1, "Watt")
     grid_status = Inverter.Register(194, "Grid Connected Status")
 
-    web_interface.startup()
+    # a = Schedular.IntervalTask(5, _print, ["something"])
 
-    time_between_checks = 60
-    loadshedding_ends = None
+    argument_dict = {
+        'logger': logger,
 
-    try:
-        while True:
-            logger.info("New controller cycle ====================================================")
+        'loadshedding': loadshedding,
 
-            state = {
-                "logger": logger,
-                "web_interface": web_interface,
+        'dryer': dryer,
 
-                "dryer": dryer,
+        'grid_status': grid_status,
+    }
 
-                "grid_status": grid_status,
-            }
+    t01_dryer_watchdog = Schedular.IntervalTask(60, f01_dryer_watchdog, [argument_dict])
 
-            f01_dryer_watchdog(state)
+    t01_dryer_watchdog.start()
 
-            time.sleep(time_between_checks)
-    except Exception as e:
-        logger.error(f"Something went wrong, {e}")
-
-
-def print_something(something):
-    print(something)
+    print()
 
 
 def f01_dryer_watchdog(state):
