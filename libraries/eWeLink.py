@@ -11,11 +11,12 @@ APP_SECRET = '4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa'
 
 
 class DeviceManager:
+    logger = None
+
     def __init__(self):
         self.headers = None
         self.bearer_token = None
         self.user_apikey = None
-        self.logger = None
 
         self.login()
 
@@ -25,6 +26,7 @@ class DeviceManager:
         return ''.join([str(random.randint(0, 9)) for i in range(length)])
 
     def login(self, credentials_file='credentials.csv'):
+        self.logger.debug("Logging into eWeLink")
         with open(credentials_file, 'r') as f:
             credentials = f.readline()
             email, password = credentials.split(',')
@@ -51,6 +53,7 @@ class DeviceManager:
             'Content-Type': 'application/json;charset=UTF-8'
         }
 
+        self.logger.debug(f"Getting bearer token, headers: {self.headers}, body: {body}")
         request = requests.post('https://eu-api.coolkit.cc:8080/api/user/login',
                                 headers=self.headers, json=body)
 
@@ -58,9 +61,12 @@ class DeviceManager:
         if 'error' in response:
             raise Exception(f"Could not log into eWeLink: ({request.status_code}) {response}")
 
+        self.logger.debug(f"eWeLink API responded with: {response}")
         self.bearer_token = response['at']
         self.user_apikey = response['user']['apikey']
         self.headers.update({'Authorization': 'Bearer ' + self.bearer_token})
+
+        self.logger.debug(f"Headers updated to: {self.headers}")
 
         return True
 
@@ -100,7 +106,7 @@ class DeviceManager:
 
 
 class Device:
-    device_manager = DeviceManager()
+    device_manager = None
     __refresh_timer = 30
     logger = None
 
@@ -114,8 +120,9 @@ class Device:
         if self.logger is None:
             raise self.NoLoggerException("Predefine the static logger for all Devices before creating an instance")
         else:
-            if self.device_manager.logger is None:
-                self.device_manager.logger = self.logger
+            if self.device_manager is None:
+                DeviceManager.logger = self.logger
+                Device.device_manager = DeviceManager()
 
         self.__device_id = device_id
         device_obj = self.device_manager.get_device(self.__device_id)
@@ -180,7 +187,6 @@ class Device:
         # If the last refresh was NOT in the last 30 seconds
         if time.time() - self.last_refresh > self.__refresh_timer or override:
             self.logger.debug(f"Refreshing {self.__str__()}")
-            self.logger.debug(f"\tDevice Manager headers: {self.device_manager.headers}")
             device_obj = self.device_manager.get_device(self.__device_id)
             self.last_refresh = time.time()
             self.logger.debug(f"{self.__str__()} refreshed with: {device_obj}")

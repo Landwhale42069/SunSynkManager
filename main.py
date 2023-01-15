@@ -1,5 +1,5 @@
 import os
-os.chdir('/home/sunsynk/SunSynkManager')
+# os.chdir('/home/sunsynk/SunSynkManager')
 
 from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
 from datetime import datetime, timedelta
