@@ -15,6 +15,7 @@ class DeviceManager:
         self.headers = None
         self.bearer_token = None
         self.user_apikey = None
+        self.logger = None
 
         self.login()
 
@@ -92,6 +93,9 @@ class DeviceManager:
 
         response = request.json()
 
+        if 'error' in response and response.get('error') != 0:
+            raise Exception(f"Error while getting device {device_id}, {response}")
+
         return response
 
 
@@ -109,6 +113,9 @@ class Device:
     def __init__(self, device_id):
         if self.logger is None:
             raise self.NoLoggerException("Predefine the static logger for all Devices before creating an instance")
+        else:
+            if self.device_manager.logger is None:
+                self.device_manager.logger = self.logger
 
         self.__device_id = device_id
         device_obj = self.device_manager.get_device(self.__device_id)
@@ -173,8 +180,10 @@ class Device:
         # If the last refresh was NOT in the last 30 seconds
         if time.time() - self.last_refresh > self.__refresh_timer or override:
             self.logger.debug(f"Refreshing {self.__str__()}")
+            self.logger.debug(f"\tDevice Manager headers: {self.device_manager.headers}")
             device_obj = self.device_manager.get_device(self.__device_id)
             self.last_refresh = time.time()
+            self.logger.debug(f"{self.__str__()} refreshed with: {device_obj}")
             self.obj = device_obj
 
     @property
@@ -187,30 +196,39 @@ class Device:
 
     @property
     def __switch(self):
-        return self.obj.get('params').get('switch')
+        _params = self.obj.get('params')
+        if _params:
+            return _params.get('switch')
 
     @property
     def switch(self):
         if self.__switch is not None:
             self.refresh()
-            return self.obj.get('params').get('switch')
+            _params = self.obj.get('params')
+            if _params:
+                return _params.get('switch')
 
     @property
     def __switches(self):
-        return self.obj.get('params').get('switches')
+        _params = self.obj.get('params')
+        if _params:
+            return _params.get('switches')
 
     @property
     def switches(self):
         if self.__switches is not None:
             self.refresh()
-            return self.obj.get('params').get('switches')
+            _params = self.obj.get('params')
+            if _params:
+                return _params.get('switches')
 
     @property
     def power(self):
-        if self.obj.get('params').get('power') is not None:
+        _params = self.obj.get('params')
+        if _params.get('power'):
             self.refresh()
-            power = self.obj.get('params').get('power')
-            return power/100 if not isinstance(power, str) else power
+            power = _params.get('power')
+            return str(power/100) if not isinstance(power, str) else power
 
     def __str__(self):
         return f"<{self.name} Device>"
