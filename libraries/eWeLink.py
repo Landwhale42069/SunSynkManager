@@ -175,6 +175,7 @@ class Device:
             self.logger.debug(f"Refreshing {self.__str__()}")
             device_obj = self.device_manager.get_device(self.__device_id)
             self.last_refresh = time.time()
+            self.logger.debug(f"{self.__str__()} refreshed with: {device_obj}")
             self.obj = device_obj
 
     @property
@@ -187,23 +188,31 @@ class Device:
 
     @property
     def __switch(self):
-        return self.obj.get('params').get('switch')
+        _params = self.obj.get('params')
+        if _params:
+            return _params.get('switch')
 
     @property
     def switch(self):
         if self.__switch is not None:
             self.refresh()
-            return self.obj.get('params').get('switch')
+            _params = self.obj.get('params')
+            if _params:
+                return _params.get('switch')
 
     @property
     def __switches(self):
-        return self.obj.get('params').get('switches')
+        _params = self.obj.get('params')
+        if _params:
+            return _params.get('switches')
 
     @property
     def switches(self):
         if self.__switches is not None:
             self.refresh()
-            return self.obj.get('params').get('switches')
+            _params = self.obj.get('params')
+            if _params:
+                return _params.get('switches')
 
     @property
     def power(self):

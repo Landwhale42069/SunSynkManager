@@ -1,10 +1,12 @@
-from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
+import os
+os.chdir('/home/sunsynk/SunSynkManager')
 
-import time
+from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
 from datetime import datetime, timedelta
 
 
 def main():
+
     # Create and set static logger for Device and Register
     logger = Logger.Logger('SunSynk')
     eWeLink.Device.logger = logger
@@ -94,7 +96,7 @@ def f01_dryer_watchdog(state):
             logger.info(f'Turning {dryer} on')
             dryer.on()
         else:
-            logger.debug('lready on')
+            logger.debug('Already on')
 
     elif loadshedding_ends:
         logger.debug(
