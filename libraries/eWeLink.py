@@ -236,6 +236,30 @@ class Device:
             power = _params.get('power')
             return str(power/100) if not isinstance(power, str) else power
 
+    def __outlet(self, index):
+        _switches = self.__switches
+        if _switches:
+            try:
+                return list(filter(lambda x: x.get('outlet') == index, _switches))[0].get('switch')
+            except Exception as e:
+                return None
+
+    def toggle(self, outlet=-1):
+        if outlet == -1:
+            if self.__switch == 'off':
+                self.on()
+            elif self.__switch == 'on':
+                self.off()
+            else:
+                raise Exception('Trying to toggle a device outlet that returns None')
+        else:
+            if self.__outlet(outlet) == 'off':
+                self.on(outlet)
+            elif self.__outlet(outlet) == 'on':
+                self.off(outlet)
+            else:
+                raise Exception('Trying to toggle a device outlet that returns None')
+
     def __str__(self):
         return f"<{self.name} Device>"
 

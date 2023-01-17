@@ -19,7 +19,7 @@ def main():
     geyser2 = eWeLink.Device('100178de05')
     pool_pump = eWeLink.Device('1001793ec2')
 
-    # stoep = eWeLink.Device('10012b9022')
+    stoep = eWeLink.Device('10012b9022')
 
     # Define registers
     # battery_soc = Inverter.Register(184, "Battery SOC", -1, "%")
@@ -30,8 +30,6 @@ def main():
     # pv2_power = Inverter.Register(187, "PV2 power", -1, "Watt")
     grid_status = Inverter.Register(194, "Grid Connected Status")
 
-    # a = Schedular.IntervalTask(5, _print, ["something"])
-
     argument_dict = {
         'loadshedding': loadshedding,
 
@@ -39,6 +37,7 @@ def main():
         'geyser1': geyser1,
         'geyser2': geyser2,
         'pool_pump': pool_pump,
+        'stoep': stoep,
 
         'grid_status': grid_status,
     }
