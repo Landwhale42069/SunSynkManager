@@ -1,4 +1,5 @@
 from flask import Flask, send_file
+from flask_cors import CORS
 import logging
 import threading
 import os
@@ -13,42 +14,23 @@ class WebAPI:
 
         self.app = Flask(__name__)
         # Disable logging
-        log = logging.getLogger('werkzeug')
-        log.disabled = True
+        # log = logging.getLogger('werkzeug')
+        # log.disabled = True
+
+        self.cors = CORS(self.app, resources={r"/devices": {"origins": "*"}})
 
         # Host index.html
         @self.app.route("/")
-        def html():
+        def base_html():
             self.logger.debug('Getting index.html')
-            index_html = os.path.join(os.getcwd(), interface_directory, 'index.html')
-            return send_file(index_html)
-
-        # Host style.css
-        @self.app.route("/main.7f1ac37130d7c240.js")
-        def main():
-            self.logger.debug('Getting main.js')
-            _file = os.path.join(os.getcwd(), interface_directory, 'main.7f1ac37130d7c240.js')
+            _file = os.path.join(os.getcwd(), interface_directory, 'index.html')
             return send_file(_file)
 
-        # Host main.js
-        @self.app.route("/polyfills.2f9d9899c1a6ea1b.js")
-        def polyfills():
-            self.logger.debug('Getting polyfills.js')
-            _file = os.path.join(os.getcwd(), interface_directory, 'polyfills.2f9d9899c1a6ea1b.js')
-            return send_file(_file)
-
-        # Host main.js
-        @self.app.route("/runtime.c64d89f55c5c6811.js")
-        def runtime():
-            self.logger.debug('Getting runtime.js')
-            _file = os.path.join(os.getcwd(), interface_directory, 'runtime.c64d89f55c5c6811.js')
-            return send_file(_file)
-
-        # Host main.js
-        @self.app.route("/styles.23fa036e24aed2f0.css")
-        def styles():
-            self.logger.debug('Getting styles.css')
-            _file = os.path.join(os.getcwd(), interface_directory, 'styles.23fa036e24aed2f0.css')
+        # Host index.html
+        @self.app.route("/<location>")
+        def alt_html(location):
+            self.logger.debug(f'Getting {location}')
+            _file = os.path.join(os.getcwd(), interface_directory, location)
             return send_file(_file)
 
         # Host device data

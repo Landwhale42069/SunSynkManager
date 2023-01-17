@@ -2,3 +2,4 @@ requests
 minimalmodbus
 pandas
 flask
+flask-cors
