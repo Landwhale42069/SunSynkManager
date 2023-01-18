@@ -4,6 +4,8 @@ import logging
 import threading
 import os
 
+import libraries.Inverter
+
 
 class WebAPI:
     logger = None
@@ -50,7 +52,7 @@ class WebAPI:
                 self.info.get('marco_kamer'),
             ]
 
-            [_device.refresh() for _device in return_dict]
+            [_device.refresh(5) for _device in return_dict]
 
             return [_device.obj for _device in return_dict]
 
@@ -66,14 +68,22 @@ class WebAPI:
                 self.info.get('load_power'),
                 self.info.get('pv1_power'),
                 self.info.get('pv2_power'),
-                self.info.get('pv2_power'),
                 self.info.get('grid_status'),
             ]
 
-            return [{
-                f"name": _register.name,
-                f"value": _register.get_display(),
+            return_dict = [{
+                "name": _register.name,
+                "value": _register.get_value(),
+                "units": _register.units,
             } for _register in return_dict]
+
+            return_dict.insert(6, {
+                "name": "Total PV power",
+                "value": return_dict[4]['value'] + return_dict[5]['value'],
+                "units": "W",
+            })
+
+            return return_dict
 
         # Host device data
         @self.app.route("/api/switchDevice", methods=['POST'])

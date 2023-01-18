@@ -1,15 +1,14 @@
 from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
-from functions import f01_dryer_watchdog
+from functions import f01_dryer_watchdog, f02_battery_saver
 
 
 def main():
 
     # Create and set static logger for Device and Register
-    logger = Logger.Logger('SunSynk')
-    eWeLink.Device.logger = logger
-    Inverter.Register.logger = logger
-    Loadshedding.Tracker.logger = logger
-    Interface.WebAPI.logger = logger
+    eWeLink.Device.logger = Logger.Logger('eWeLink')
+    Inverter.Register.logger = Logger.Logger('Inverter')
+    Loadshedding.Tracker.logger = Logger.Logger('Loadshedding')
+    Interface.WebAPI.logger = Logger.Logger('Interface')
 
     loadshedding = Loadshedding.Tracker("schedule.csv")
 
@@ -50,13 +49,14 @@ def main():
         'grid_status': grid_status,
     }
 
+    f02_battery_saver.logic(argument_dict)
+    print()
+
     web_interface = Interface.WebAPI("interface", argument_dict)
     web_interface.startup()
 
     t01_dryer_watchdog = Schedular.IntervalTask(60, f01_dryer_watchdog.logic, [argument_dict])
     t01_dryer_watchdog.start()
-
-    print()
 
 
 if __name__ == "__main__":

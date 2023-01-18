@@ -1,4 +1,18 @@
 import minimalmodbus
+import random
+
+
+class FakeInstrument:
+    def __init__(self):
+        ...
+
+    @staticmethod
+    def read_registers(a, b):
+        return random.randint(0, a)
+
+    @staticmethod
+    def read_register(a):
+        return random.randint(0, a)
 
 
 class Register:
@@ -11,7 +25,7 @@ class Register:
         __instrument.serial.stopbits = 1
         __instrument.serial.timeout = 0.2  # seconds
     except Exception as e:
-        __instrument = 25
+        __instrument = FakeInstrument()
 
     logger = None
 

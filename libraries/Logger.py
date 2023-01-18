@@ -4,7 +4,7 @@ from datetime import datetime
 import time
 import json
 
-DEFAULT_FORMATTER = logging.Formatter(fmt='%(asctime)-8s | %(filename)-18s:%(funcName)-22s:%(lineno)-3d | %(levelname)-8s: %(message)s',
+DEFAULT_FORMATTER = logging.Formatter(fmt='%(asctime)-8s | %(filename)-22s:%(funcName)-22s:%(lineno)-3d | %(levelname)-8s: %(message)s',
                                       datefmt='%H:%M:%S')
 HTML_FORMATTER = logging.Formatter(fmt='%(message)s')
 
@@ -28,7 +28,7 @@ class Logger(logging.Logger):
 
         handler = logging.StreamHandler()
         handler.setFormatter(DEFAULT_FORMATTER)
-        handler.setLevel(20)
+        handler.setLevel(0)
         self.addHandler(handler)
 
         self.date = datetime.now().isoformat().split('T')[0]
@@ -59,9 +59,6 @@ class Logger(logging.Logger):
         self.__file_handler.setFormatter(DEFAULT_FORMATTER)
         self.__file_handler.setLevel(0)
         self.addHandler(self.__file_handler)
-
-        self.info("===========================================")
-        self.debug(f"{self.name} logger created...")
 
     class LoggerCantMakeFileException(Exception):
         pass

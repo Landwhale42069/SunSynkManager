@@ -173,7 +173,7 @@ class Device:
 
         response = request.json()
 
-        self.refresh(True)
+        self.refresh(0)
 
         if 'error' in response and response.get('error') != 0:
             error_message = f"There was an issue when trying to switch {self.name} {state}, {response.get('error')}: {response.get('errmsg')}"
@@ -183,13 +183,13 @@ class Device:
         else:
             self.logger.debug(f"Successfully turned {self.name} {state}")
 
-    def refresh(self, override=False):
+    def refresh(self, refresh_timer=__refresh_timer):
         # If the last refresh was NOT in the last 30 seconds
-        if time.time() - self.last_refresh > self.__refresh_timer or override:
+        if time.time() - self.last_refresh > refresh_timer:
             self.logger.debug(f"Refreshing {self.__str__()}")
             device_obj = self.device_manager.get_device(self.__device_id)
             self.last_refresh = time.time()
-            self.logger.debug(f"{self.__str__()} refreshed with: {device_obj}")
+            self.logger.debug(f"{self.__str__()} refreshed")
             self.obj = device_obj
 
     @property
