@@ -14,8 +14,8 @@ class WebAPI:
 
         self.app = Flask(__name__)
         # Disable logging
-        # log = logging.getLogger('werkzeug')
-        # log.disabled = True
+        log = logging.getLogger('werkzeug')
+        log.disabled = True
 
         self.cors = CORS(self.app, resources={r"/*": {"origins": "*"}})
 
