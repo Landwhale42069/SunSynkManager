@@ -40,15 +40,40 @@ class WebAPI:
         @self.app.route("/api/devices")
         def devices():
             self.logger.debug('Getting devices')
+
             return_dict = [
-                self.info.get('dryer').obj,
-                self.info.get('geyser1').obj,
-                self.info.get('geyser2').obj,
-                self.info.get('pool_pump').obj,
-                self.info.get('stoep').obj,
+                self.info.get('dryer'),
+                self.info.get('geyser1'),
+                self.info.get('geyser2'),
+                self.info.get('pool_pump'),
+                self.info.get('stoep'),
+                self.info.get('marco_kamer'),
             ]
 
-            return return_dict
+            [_device.refresh() for _device in return_dict]
+
+            return [_device.obj for _device in return_dict]
+
+        # Host inverter data
+        @self.app.route("/api/inverter")
+        def inverter():
+            self.logger.debug('Getting inverter')
+
+            return_dict = [
+                self.info.get('battery_soc'),
+                self.info.get('battery_power'),
+                self.info.get('grid_power'),
+                self.info.get('load_power'),
+                self.info.get('pv1_power'),
+                self.info.get('pv2_power'),
+                self.info.get('pv2_power'),
+                self.info.get('grid_status'),
+            ]
+
+            return [{
+                f"name": _register.name,
+                f"value": _register.get_display(),
+            } for _register in return_dict]
 
         # Host device data
         @self.app.route("/api/switchDevice", methods=['POST'])
