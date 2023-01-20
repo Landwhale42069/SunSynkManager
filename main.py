@@ -1,6 +1,8 @@
 from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
 from functions import f01_dryer_watchdog, f02_battery_saver
 
+from datetime import datetime
+
 
 def main():
 
@@ -15,8 +17,33 @@ def main():
     # Define devices
     dryer = eWeLink.Device('100168b564')
     geyser1 = eWeLink.Device('10017e9016')
+    geyser1.expected_usage = 2000
+    geyser1.expected_activity = [
+        {
+            'start': datetime.strptime('14:30', '%H:%M').time(),
+            'end': datetime.strptime('16:30', '%H:%M').time(),
+        },
+        {
+            'start': datetime.strptime('8:30', '%H:%M').time(),
+            'end': datetime.strptime('10:30', '%H:%M').time(),
+        },
+    ]
+
     geyser2 = eWeLink.Device('100178de05')
+    geyser2.expected_usage = 2000
+
     pool_pump = eWeLink.Device('1001793ec2')
+    pool_pump.expected_usage = 2000
+    pool_pump.expected_activity = [
+        {
+            'start': datetime.strptime('14:30', '%H:%M').time(),
+            'end': datetime.strptime('16:30', '%H:%M').time(),
+        },
+        {
+            'start': datetime.strptime('8:30', '%H:%M').time(),
+            'end': datetime.strptime('10:30', '%H:%M').time(),
+        },
+    ]
 
     stoep = eWeLink.Device('10012b9022')
     marco_kamer = eWeLink.Device('1000f6e808')

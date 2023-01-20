@@ -1,7 +1,9 @@
 from libraries import Logger
+from datetime import datetime
 
 __battery_Wh_capacity = 10800
 __battery_safety = 30
+__projected_duration = 2
 
 __sample_history = 10
 __trigger_every = 10
@@ -9,11 +11,15 @@ __trigger_count = __trigger_every
 
 __battery_discharge_rate = [0]*__sample_history
 
+__disabled_devices = []
+
 
 def logic(state):
     global \
         __battery_Wh_capacity, __battery_safety, __battery_discharge_rate, \
-        __trigger_every, __trigger_count
+        __trigger_every, __trigger_count, \
+        __projected_duration, \
+        __disabled_devices
 
     logger = Logger.Logger('f02_battery_saver')
     logger.info(f"------------------------------------------")
@@ -33,8 +39,17 @@ def logic(state):
         average_battery_power = sum(__battery_discharge_rate) / len(__battery_discharge_rate)
         power_left = (battery_soc.get_value() / 100) * __battery_Wh_capacity
 
-        expected_percentage_left = ((power_left - average_battery_power * 2) / __battery_Wh_capacity) * 100
-        factor = 3 * (1 - (expected_percentage_left - __battery_safety) / (100 - __battery_safety))
+        expected_percentage_left = ((power_left - average_battery_power * __projected_duration) / __battery_Wh_capacity) * 100
+
+        logger.debug(f"\tCurrent       | {round(power_left, 2):>20} %")
+        logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
+        logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
+
+        missing_percentage = 100 - expected_percentage_left
+        # Power to drop = missing power (Wh) * time to recover (1/h) * ratio
+        power_to_drop = (missing_percentage/100) * __battery_Wh_capacity * (1/__projected_duration) * 1
+
+        logger.info(f"\tGoing to try to drop {round(power_to_drop, 2)} W")
 
         device_list = [
             state.get('geyser1'),
@@ -42,22 +57,15 @@ def logic(state):
             state.get('pool_pump'),
         ]
 
-        logger.info(f"Factor of {factor}")
-        logger.debug(f"\tCurrent %       {average_battery_power:>20}")
-        logger.debug(f"\tAverage usage   {average_battery_power:>20}")
-        logger.debug(f"\tExpected % left {expected_percentage_left:>20}")
+        for _device in device_list:
+            _expected_usage = _device.get_usage()
 
-        for i in range(int(factor)):
-            if i < len(device_list):
-                logger.debug(f"Disabling device {i + 1}")
-                device = device_list[i]
+            # If the device's expected usage needs to be dropped, and the device isn't disabled
+            if _expected_usage < power_to_drop and not __disabled_devices.__contains__(_device):
+                power_to_drop -= _expected_usage
+                _device.shutdown()
+                __disabled_devices.append(_device)
 
-                if device.switch == 'on':
-                    logger.debug(f"{device.name} is on, turning off")
-                    device.off()
-
-                if device.switches:
-                    for outlet in device.switches:
-                        if outlet.get('switch') == 'on':
-                            logger.debug(f"{device.name} outlet {outlet.get('outlet')} is on, turning off")
-                            device.off(outlet.get('outlet'))
+        for _device in __disabled_devices:
+            if _device.get_usage(if_on=True) == 0:
+                _device.restore()

@@ -5,6 +5,7 @@ import json
 import hashlib
 import base64
 import requests
+from datetime import datetime
 
 APP_ID = 'YzfeftUVcZ6twZw1OoVKPRFYTrGEg01Q'
 APP_SECRET = '4G91qSoboqYO4Y0XJ0LPPKIsq8reHdfa'
@@ -129,7 +130,79 @@ class Device:
         self.last_refresh = time.time()
         self.obj = device_obj
 
+        self.expected_usage = 0
+        self.expected_activity = None
+        self.shutdown_state = {}
+
         self.logger.info(f"Successfully created {self.__str__()}")
+
+    def get_usage(self, if_on=False):
+        """
+        uses expected power usage and expected on times to return the power usage, 0 when off
+        :return: Current power usage
+        """
+        if self.any or if_on:
+            # If no expected activity list is defined:
+            if self.expected_activity is None:
+                # return usage
+                return self.expected_usage
+
+            # Else (Specific activity list)
+            else:
+                # For each active time:
+                for active_time in self.expected_activity:
+                    # If we are in an active time: return expected usage
+                    if active_time.get('start') < datetime.now().time() < active_time.get('start'):
+                        return self.expected_usage
+
+                return 0
+        else:
+            return 0
+
+    @property
+    def any(self):
+        # If the main is on: return True
+        if self.switch == 'on':
+            return True
+
+        # For each outlet:
+        for outlet in self.switches:
+            # If the outlet is on: return True
+            if outlet.get('switch') == 'on':
+                return True
+
+        return False
+
+    def shutdown(self):
+        # Store current state for self.restore later
+        self.shutdown_state = {
+            'switch': self.switch,
+            'switches': self.switches,
+        }
+
+        # If main is on, turn off
+        if self.switch == 'on':
+            self.off()
+
+        # For each outlet:
+        for outlet in self.switches:
+            # If the switch is on, turn it off:
+            if outlet.get('switch') == 'on':
+                self.off(outlet.get('outlet'))
+
+    def restore(self):
+        # If the main switch WAS on, and isnt anymore, turn on
+        _switch = self.shutdown_state.get('switch')
+        if _switch == 'on' and self.switch == 'off':
+            self.on()
+
+        # For all the outlets, if they WERE on, and arent anymore, turn on
+        restore_outlets = self.shutdown_state.get('switches') or []
+        current_outlets = self.switches or []
+
+        for i in range(current_outlets):
+            if restore_outlets[i].get('switch') == 'on' and current_outlets[i].get('switch') == 'off':
+                self.on(current_outlets[i].get('outlet'))
 
     def on(self, outlet=-1):
         try:
