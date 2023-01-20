@@ -45,9 +45,9 @@ def logic(state):
         logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
         logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
 
-        missing_percentage = 100 - expected_percentage_left
+        missing_percentage = 85 - expected_percentage_left
         # Power to drop = missing power (Wh) * time to recover (1/h) * ratio
-        power_to_drop = (missing_percentage/100) * __battery_Wh_capacity * (1/__projected_duration) * 1
+        power_to_drop = (missing_percentage/100) * __battery_Wh_capacity * (1/__projected_duration) * 1.5
 
         logger.info(f"\tGoing to try to drop {round(power_to_drop, 2)} W")
 
@@ -66,6 +66,14 @@ def logic(state):
                 _device.shutdown()
                 __disabled_devices.append(_device)
 
+        restored_devices = []
         for _device in __disabled_devices:
             if _device.get_usage(if_on=True) == 0:
                 _device.restore()
+                restored_devices.append(_device)
+
+        for _device in restored_devices:
+            __disabled_devices.pop(__disabled_devices.index(_device))
+
+    return logger
+

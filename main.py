@@ -76,14 +76,17 @@ def main():
         'grid_status': grid_status,
     }
 
-    f02_battery_saver.logic(argument_dict)
-    print()
-
     web_interface = Interface.WebAPI("interface", argument_dict)
-    web_interface.startup()
 
     t01_dryer_watchdog = Schedular.IntervalTask(60, f01_dryer_watchdog.logic, [argument_dict])
+    t02_battery_saver = Schedular.IntervalTask(10, f02_battery_saver.logic, [argument_dict])
+
+    argument_dict['t01_dryer_watchdog'] = t01_dryer_watchdog
+    argument_dict['t02_battery_saver'] = t02_battery_saver
+
+    web_interface.startup()
     t01_dryer_watchdog.start()
+    t02_battery_saver.start()
 
 
 if __name__ == "__main__":

@@ -152,7 +152,7 @@ class Device:
                 # For each active time:
                 for active_time in self.expected_activity:
                     # If we are in an active time: return expected usage
-                    if active_time.get('start') < datetime.now().time() < active_time.get('start'):
+                    if active_time.get('start') < datetime.now().time() < active_time.get('end'):
                         return self.expected_usage
 
                 return 0

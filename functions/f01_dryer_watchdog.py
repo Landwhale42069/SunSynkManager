@@ -48,3 +48,5 @@ def logic(state):
         if dryer.switch == 'off':
             logger.info(f'Turning {dryer} on')
             dryer.on()
+
+    return logger

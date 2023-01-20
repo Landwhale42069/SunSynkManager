@@ -56,35 +56,6 @@ class WebAPI:
 
             return [_device.obj for _device in return_dict]
 
-        # Host inverter data
-        @self.app.route("/api/inverter")
-        def inverter():
-            self.logger.debug('Getting inverter')
-
-            return_dict = [
-                self.info.get('battery_soc'),
-                self.info.get('battery_power'),
-                self.info.get('grid_power'),
-                self.info.get('load_power'),
-                self.info.get('pv1_power'),
-                self.info.get('pv2_power'),
-                self.info.get('grid_status'),
-            ]
-
-            return_dict = [{
-                "name": _register.name,
-                "value": _register.get_value(),
-                "units": _register.units,
-            } for _register in return_dict]
-
-            return_dict.insert(6, {
-                "name": "Total PV power",
-                "value": return_dict[4]['value'] + return_dict[5]['value'],
-                "units": "W",
-            })
-
-            return return_dict
-
         # Host device data
         @self.app.route("/api/switchDevice", methods=['POST'])
         def switch_device():
@@ -115,6 +86,53 @@ class WebAPI:
             return {
                 'error': _error
             }
+
+        # Host inverter data
+        @self.app.route("/api/inverter")
+        def inverter():
+            self.logger.debug('Getting inverter')
+
+            return_dict = [
+                self.info.get('battery_soc'),
+                self.info.get('battery_power'),
+                self.info.get('grid_power'),
+                self.info.get('load_power'),
+                self.info.get('pv1_power'),
+                self.info.get('pv2_power'),
+                self.info.get('grid_status'),
+            ]
+
+            return_dict = [{
+                "name": _register.name,
+                "value": _register.get_value(),
+                "units": _register.units,
+            } for _register in return_dict]
+
+            return_dict.insert(6, {
+                "name": "Total PV power",
+                "value": return_dict[4]['value'] + return_dict[5]['value'],
+                "units": "W",
+            })
+
+            return return_dict
+
+        # Host track data
+        @self.app.route("/api/tasks")
+        def tasks():
+            self.logger.debug('Getting tasks')
+
+            return_dict = [
+                self.info.get('t01_dryer_watchdog'),
+                self.info.get('t02_battery_saver')
+            ]
+
+            return [
+                {
+                    'name': task.name,
+                    'active': task.active,
+                    'logs': task.logs,
+                } for task in return_dict
+            ]
 
     def startup(self):
         x = threading.Thread(target=self.app.run, kwargs={
