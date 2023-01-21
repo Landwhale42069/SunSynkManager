@@ -22,7 +22,7 @@ class SunSynkInstrument(minimalmodbus.Instrument):
 
         for register in self.update_to_get:
             if isinstance(register, tuple) or isinstance(register, list):
-                self.__registers[str(register)] = self.read_registers(register)
+                self.__registers[str(register)] = self.read_registers(*register)
             else:
                 self.__registers[str(register)] = self.read_register(register)
 
