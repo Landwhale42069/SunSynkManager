@@ -84,8 +84,8 @@ def main():
     print()
 
     web_interface.startup()
-    # t01_dryer_watchdog.start()
-    # t02_battery_saver.start()
+    t01_dryer_watchdog.start()
+    t02_battery_saver.start()
 
 
 if __name__ == "__main__":
