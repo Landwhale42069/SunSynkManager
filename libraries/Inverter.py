@@ -1,31 +1,36 @@
 import minimalmodbus
-import random
+from threading import Timer
 
 
-class FakeInstrument:
+
+class SunSynkInstrument(minimalmodbus.Instrument):
     def __init__(self):
-        ...
+        try:
+            super(SunSynkInstrument, self).__init__('/dev/ttyUSB0', 1)
+            self.serial.baudrate = 9600  # Baud
+            self.serial.bytesize = 8
+            self.serial.parity = 'N'
+            self.serial.stopbits = 1
+            self.serial.timeout = 0.2  # seconds
+        except Exception as e:
+            print('Dev mode')
 
-    @staticmethod
-    def read_registers(a, b):
-        return random.randint(0, a)
+        self.update_to_get = []
+        self.__registers = {}
 
-    @staticmethod
-    def read_register(a):
-        return random.randint(0, a)
+    def _self_update(self):
+        t = Timer(5, self._self_update, []).start()
+
+        for register in self.update_to_get:
+            self.__registers[str(register)] = self.read_register(register)
+
+    def _read_register(self, register):
+        return self.__registers[str(register)]
 
 
 class Register:
     # Private instrument variable that is static over all registers
-    try:
-        __instrument = minimalmodbus.Instrument('/dev/ttyUSB0', 1)
-        __instrument.serial.baudrate = 9600  # Baud
-        __instrument.serial.bytesize = 8
-        __instrument.serial.parity = 'N'
-        __instrument.serial.stopbits = 1
-        __instrument.serial.timeout = 0.2  # seconds
-    except Exception as e:
-        __instrument = FakeInstrument()
+    __instrument = SunSynkInstrument()
 
     logger = None
 
@@ -40,6 +45,8 @@ class Register:
         self.name = name
         self.factor = factor
         self.units = units
+
+        self.__instrument.update_to_get.append(registers)
 
         self.logger.info(f"Successfully created {self.__str__()}")
 

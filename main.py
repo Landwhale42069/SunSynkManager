@@ -17,31 +17,27 @@ def main():
     # Define devices
     dryer = eWeLink.Device('100168b564')
     geyser1 = eWeLink.Device('10017e9016')
-    geyser1.expected_usage = 2000
+    geyser1.expected_usage = 2100
     geyser1.expected_activity = [
         {
-            'start': datetime.strptime('14:30', '%H:%M').time(),
-            'end': datetime.strptime('16:30', '%H:%M').time(),
+            'start': datetime.strptime('9:30', '%H:%M').time(),
+            'end': datetime.strptime('10:30', '%H:%M').time(),
         },
         {
-            'start': datetime.strptime('8:30', '%H:%M').time(),
-            'end': datetime.strptime('10:30', '%H:%M').time(),
+            'start': datetime.strptime('14:15', '%H:%M').time(),
+            'end': datetime.strptime('15:00', '%H:%M').time(),
         },
     ]
 
     geyser2 = eWeLink.Device('100178de05')
-    geyser2.expected_usage = 2000
+    geyser2.expected_usage = 2100
 
     pool_pump = eWeLink.Device('1001793ec2')
-    pool_pump.expected_usage = 2000
+    pool_pump.expected_usage = 750
     pool_pump.expected_activity = [
         {
-            'start': datetime.strptime('14:30', '%H:%M').time(),
-            'end': datetime.strptime('16:30', '%H:%M').time(),
-        },
-        {
-            'start': datetime.strptime('8:30', '%H:%M').time(),
-            'end': datetime.strptime('10:30', '%H:%M').time(),
+            'start': datetime.strptime('8:00', '%H:%M').time(),
+            'end': datetime.strptime('16:00', '%H:%M').time(),
         },
     ]
 
@@ -84,6 +80,8 @@ def main():
 
     argument_dict['f01_dryer_watchdog'] = t01_dryer_watchdog
     argument_dict['f02_battery_saver'] = t02_battery_saver
+
+    print()
 
     web_interface.startup()
     t01_dryer_watchdog.start()
