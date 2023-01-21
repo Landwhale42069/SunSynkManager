@@ -2,7 +2,6 @@ import minimalmodbus
 from threading import Timer
 
 
-
 class SunSynkInstrument(minimalmodbus.Instrument):
     def __init__(self):
         try:
@@ -19,10 +18,13 @@ class SunSynkInstrument(minimalmodbus.Instrument):
         self.__registers = {}
 
     def _self_update(self):
-        t = Timer(5, self._self_update, []).start()
+        t = Timer(1, self._self_update, []).start()
 
         for register in self.update_to_get:
-            self.__registers[str(register)] = self.read_register(register)
+            if isinstance(register, tuple) or isinstance(register, list):
+                self.__registers[str(register)] = self.read_registers(register)
+            else:
+                self.__registers[str(register)] = self.read_register(register)
 
     def _read_register(self, register):
         return self.__registers[str(register)]
@@ -54,7 +56,7 @@ class Register:
         if isinstance(self.registers, tuple) or isinstance(self.registers, list):
             values = self.__instrument.read_registers(self.registers[0], len(self.registers))
         else:
-            values = self.__instrument.read_register(self.registers)
+            values = self.__instrument._read_register(self.registers)
 
         if isinstance(values, tuple) or isinstance(values, list):
             return_value = (values[1] << 16) + values[0]
