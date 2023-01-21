@@ -4,8 +4,6 @@ import logging
 import threading
 import os
 
-import libraries.Inverter
-
 
 class WebAPI:
     logger = None
@@ -121,22 +119,31 @@ class WebAPI:
         def tasks():
             self.logger.debug('Getting tasks')
 
-            return_dict = [
-                self.info.get('t01_dryer_watchdog'),
-                self.info.get('t02_battery_saver')
-            ]
+            task_list = ['f01_dryer_watchdog', 'f02_battery_saver']
 
-            return [
-                {
-                    'name': task.name,
-                    'active': task.active,
-                    'logs': task.logs,
-                } for task in return_dict
-            ]
+            loggers = self.info.get('loggers')
+
+            return_dict = [{
+                'name': task,
+                'active': self.info.get(task).active,
+                'logs': self.get_logs(loggers.get(task).directory, task),
+            } for task in task_list]
+
+            return return_dict
 
     def startup(self):
         x = threading.Thread(target=self.app.run, kwargs={
             'host': "0.0.0.0"
         })
         x.start()
+
+    @staticmethod
+    def get_logs(directory, name):
+        log_content = []
+        for file in os.listdir(directory):
+            if name in file:
+                with open(os.path.join(directory, file)) as log_file:
+                    log_content.append(log_file.read())
+
+        return log_content
 

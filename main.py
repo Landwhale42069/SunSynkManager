@@ -58,6 +58,7 @@ def main():
     grid_status = Inverter.Register(194, "Grid Connected Status")
 
     argument_dict = {
+        'loggers': {},
         'loadshedding': loadshedding,
 
         'dryer': dryer,
@@ -81,8 +82,8 @@ def main():
     t01_dryer_watchdog = Schedular.IntervalTask(60, f01_dryer_watchdog.logic, [argument_dict])
     t02_battery_saver = Schedular.IntervalTask(10, f02_battery_saver.logic, [argument_dict])
 
-    argument_dict['t01_dryer_watchdog'] = t01_dryer_watchdog
-    argument_dict['t02_battery_saver'] = t02_battery_saver
+    argument_dict['f01_dryer_watchdog'] = t01_dryer_watchdog
+    argument_dict['f02_battery_saver'] = t02_battery_saver
 
     web_interface.startup()
     t01_dryer_watchdog.start()

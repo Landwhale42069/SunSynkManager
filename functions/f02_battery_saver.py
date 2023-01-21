@@ -77,5 +77,5 @@ def logic(state):
             for _device in restored_devices:
                 __disabled_devices.pop(__disabled_devices.index(_device))
 
-    return logger
+    state['loggers']['f02_battery_saver'] = logger
 

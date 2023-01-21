@@ -49,4 +49,4 @@ def logic(state):
             logger.info(f'Turning {dryer} on')
             dryer.on()
 
-    return logger
+    state['loggers']['f01_dryer_watchdog'] = logger
