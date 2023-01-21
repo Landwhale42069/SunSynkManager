@@ -50,8 +50,6 @@ class WebAPI:
                 self.info.get('marco_kamer'),
             ]
 
-            [_device.refresh(5) for _device in return_dict]
-
             return [_device.obj for _device in return_dict]
 
         # Host device data

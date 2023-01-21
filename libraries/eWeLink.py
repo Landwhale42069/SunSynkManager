@@ -98,7 +98,10 @@ class DeviceManager:
         request = requests.get(f'https://eu-api.coolkit.cc:8080/api/user/device/{device_id}?{url_params}',
                                headers=self.headers)
 
-        response = request.json()
+        try:
+            response = request.json()
+        except Exception as e:
+            print()
 
         if 'error' in response and response.get('error') != 0:
             raise Exception(f"Error while getting device {device_id}, {response}")
@@ -109,6 +112,7 @@ class DeviceManager:
 class Device:
     device_manager = None
     __refresh_timer = 30
+    __minimum_refresh_time = 3
     logger = None
 
     class NoLoggerException(Exception):
@@ -246,7 +250,7 @@ class Device:
 
         response = request.json()
 
-        self.refresh(0)
+        self.refresh(1)
 
         if 'error' in response and response.get('error') != 0:
             error_message = f"There was an issue when trying to switch {self.name} {state}, {response.get('error')}: {response.get('errmsg')}"
@@ -257,6 +261,8 @@ class Device:
             self.logger.debug(f"Successfully turned {self.name} {state}")
 
     def refresh(self, refresh_timer=__refresh_timer):
+        if refresh_timer < self.__minimum_refresh_time:
+            refresh_timer = self.__minimum_refresh_time
         # If the last refresh was NOT in the last 30 seconds
         if time.time() - self.last_refresh > refresh_timer:
             self.logger.debug(f"Refreshing {self.__str__()}")
