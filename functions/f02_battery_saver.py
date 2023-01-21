@@ -22,7 +22,6 @@ def logic(state):
         __disabled_devices
 
     logger = Logger.Logger('f02_battery_saver')
-    logger.info(f"------------------------------------------")
 
     battery_soc = state.get('battery_soc')
     battery_power = state.get('battery_power')
@@ -35,6 +34,7 @@ def logic(state):
         __trigger_count -= 1
 
     else:
+        logger.info(f"------------------------------------------")
         __trigger_count = __trigger_every
 
         current_percent = battery_soc.get_value()
@@ -47,16 +47,16 @@ def logic(state):
         logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
         logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
 
-        missing_percentage = 85 - expected_percentage_left
+        missing_percentage = 40 - expected_percentage_left
         # Power to drop = missing power (Wh) * time to recover (1/h) * ratio
-        power_to_drop = (missing_percentage/100) * __battery_Wh_capacity * (1/__projected_duration) * 1.5
+        power_to_drop = (missing_percentage/100) * __battery_Wh_capacity * (1/__projected_duration) * 4
 
-        logger.info(f"\tGoing to try to drop {round(power_to_drop, 2)} W")
+        logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
         device_list = [
             state.get('geyser1'),
             state.get('geyser2'),
-            state.get('pool_pump'),
+            # state.get('pool_pump'),
         ]
 
         if power_to_drop > 0:
@@ -65,13 +65,17 @@ def logic(state):
 
                 # If the device's expected usage needs to be dropped, and the device isn't disabled
                 if _expected_usage < power_to_drop and not __disabled_devices.__contains__(_device):
+                    logger.info(f"{_device.name} is using ~{_expected_usage} W, turning it off")
                     power_to_drop -= _expected_usage
                     _device.shutdown()
-                    __disabled_devices.append(_device)
+
+                    if _device.device_id != '100178de05':
+                        __disabled_devices.append(_device)
         else:
             restored_devices = []
             for _device in __disabled_devices:
                 if _device.get_usage(if_on=True) == 0:
+                    logger.info(f"{_device.name} isn't going to use power now... Resetting it's state")
                     _device.restore()
                     restored_devices.append(_device)
 

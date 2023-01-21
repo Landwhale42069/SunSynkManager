@@ -54,7 +54,12 @@ def main():
     grid_status = Inverter.Register(194, "Grid Connected Status")
 
     argument_dict = {
-        'loggers': {},
+        'loggers': {
+            "eWeLink": eWeLink.Device.logger,
+            "Inverter": Inverter.Register.logger,
+            "Loadshedding": Loadshedding.Tracker.logger,
+            "Interface": Interface.WebAPI.logger,
+        },
         'loadshedding': loadshedding,
 
         'dryer': dryer,

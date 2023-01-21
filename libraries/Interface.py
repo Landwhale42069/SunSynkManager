@@ -119,13 +119,26 @@ class WebAPI:
 
             task_list = ['f01_dryer_watchdog', 'f02_battery_saver']
 
+            return_dict = [{
+                "name": task,
+                "active": self.info.get(task).active,
+            } for task in task_list]
+
+            return return_dict
+
+        # Host track data
+        @self.app.route("/api/logs")
+        def logs():
+            self.logger.debug('Getting logs')
+
             loggers = self.info.get('loggers')
 
+            other_logs = ['f01_dryer_watchdog', 'f02_battery_saver', "eWeLink", "Inverter", "Loadshedding", "Interface"]
+
             return_dict = [{
-                'name': task,
-                'active': self.info.get(task).active,
-                'logs': self.get_logs(loggers.get(task).directory, task),
-            } for task in task_list]
+                    'name': logs,
+                    'logs': self.get_logs(loggers.get(logs).directory, logs),
+                } for logs in other_logs]
 
             return return_dict
 
@@ -141,7 +154,10 @@ class WebAPI:
         for file in os.listdir(directory):
             if name in file:
                 with open(os.path.join(directory, file)) as log_file:
-                    log_content.append(log_file.read())
+                    log_content.append({
+                        "name": file,
+                        "content": log_file.read()
+                    })
 
         return log_content
 
