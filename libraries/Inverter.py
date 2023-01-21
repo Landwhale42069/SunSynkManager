@@ -34,10 +34,16 @@ class SunSynkInstrument(minimalmodbus.Instrument):
                 self.__registers[str(register)] = 0
 
     def new_read_register(self, register):
-        return self.__registers[str(register)]
+        try:
+            return self.__registers[str(register)]
+        except KeyError as e:
+            return 0
 
     def new_read_registers(self, register, number_of_registers):
-        return self.__registers[str([register, number_of_registers])]
+        try:
+            return self.__registers[str([register, number_of_registers])]
+        except KeyError as e:
+            return [0]*number_of_registers
 
 
 class Register:
