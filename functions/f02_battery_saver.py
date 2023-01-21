@@ -36,12 +36,13 @@ def logic(state):
     else:
         __trigger_count -= 1
 
+        current_percent = battery_soc.get_value()
         average_battery_power = sum(__battery_discharge_rate) / len(__battery_discharge_rate)
-        power_left = (battery_soc.get_value() / 100) * __battery_Wh_capacity
+        power_left = (current_percent / 100) * __battery_Wh_capacity
 
         expected_percentage_left = ((power_left - average_battery_power * __projected_duration) / __battery_Wh_capacity) * 100
 
-        logger.debug(f"\tCurrent       | {round(power_left, 2):>20} %")
+        logger.debug(f"\tCurrent       | {round(current_percent, 2):>20} %")
         logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
         logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
 

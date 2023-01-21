@@ -166,7 +166,7 @@ class Device:
             return True
 
         # For each outlet:
-        for outlet in self.switches:
+        for outlet in (self.switches or []):
             # If the outlet is on: return True
             if outlet.get('switch') == 'on':
                 return True
