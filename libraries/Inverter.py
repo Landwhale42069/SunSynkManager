@@ -4,6 +4,10 @@ from threading import Timer
 
 class SunSynkInstrument(minimalmodbus.Instrument):
     def __init__(self):
+        self.update_to_get = []
+        self.__registers = {}
+        self.run = True
+
         try:
             super(SunSynkInstrument, self).__init__('/dev/ttyUSB0', 1)
             self.serial.baudrate = 9600  # Baud
@@ -14,20 +18,26 @@ class SunSynkInstrument(minimalmodbus.Instrument):
         except Exception as e:
             print('Dev mode')
 
-        self.update_to_get = []
-        self.__registers = {}
+        self._self_update()
 
     def _self_update(self):
-        t = Timer(1, self._self_update, []).start()
+        if self.run:
+            t = Timer(1, self._self_update, []).start()
 
         for register in self.update_to_get:
-            if isinstance(register, tuple) or isinstance(register, list):
-                self.__registers[str(register)] = self.read_registers(*register)
-            else:
-                self.__registers[str(register)] = self.read_register(register)
+            try:
+                if isinstance(register, tuple) or isinstance(register, list):
+                    self.__registers[str(register)] = self.read_registers(*register)
+                else:
+                    self.__registers[str(register)] = self.read_register(register)
+            except minimalmodbus.ModbusException as e:
+                self.__registers[str(register)] = 0
 
-    def _read_register(self, register):
+    def new_read_register(self, register):
         return self.__registers[str(register)]
+
+    def new_read_registers(self, register, number_of_registers):
+        return self.__registers[str([register, number_of_registers])]
 
 
 class Register:
@@ -54,9 +64,9 @@ class Register:
 
     def get_value(self):
         if isinstance(self.registers, tuple) or isinstance(self.registers, list):
-            values = self.__instrument.read_registers(self.registers[0], len(self.registers))
+            values = self.__instrument.new_read_registers(self.registers[0], len(self.registers))
         else:
-            values = self.__instrument._read_register(self.registers)
+            values = self.__instrument.new_read_register(self.registers)
 
         if isinstance(values, tuple) or isinstance(values, list):
             return_value = (values[1] << 16) + values[0]

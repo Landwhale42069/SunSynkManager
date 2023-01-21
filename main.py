@@ -81,8 +81,6 @@ def main():
     argument_dict['f01_dryer_watchdog'] = t01_dryer_watchdog
     argument_dict['f02_battery_saver'] = t02_battery_saver
 
-    print()
-
     web_interface.startup()
     t01_dryer_watchdog.start()
     t02_battery_saver.start()
