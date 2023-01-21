@@ -200,7 +200,7 @@ class Device:
         restore_outlets = self.shutdown_state.get('switches') or []
         current_outlets = self.switches or []
 
-        for i in range(current_outlets):
+        for i in range(len(current_outlets)):
             if restore_outlets[i].get('switch') == 'on' and current_outlets[i].get('switch') == 'off':
                 self.on(current_outlets[i].get('outlet'))
 

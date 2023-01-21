@@ -58,23 +58,24 @@ def logic(state):
             state.get('pool_pump'),
         ]
 
-        for _device in device_list:
-            _expected_usage = _device.get_usage()
+        if power_to_drop > 0:
+            for _device in device_list:
+                _expected_usage = _device.get_usage()
 
-            # If the device's expected usage needs to be dropped, and the device isn't disabled
-            if _expected_usage < power_to_drop and not __disabled_devices.__contains__(_device):
-                power_to_drop -= _expected_usage
-                _device.shutdown()
-                __disabled_devices.append(_device)
+                # If the device's expected usage needs to be dropped, and the device isn't disabled
+                if _expected_usage < power_to_drop and not __disabled_devices.__contains__(_device):
+                    power_to_drop -= _expected_usage
+                    _device.shutdown()
+                    __disabled_devices.append(_device)
+        else:
+            restored_devices = []
+            for _device in __disabled_devices:
+                if _device.get_usage(if_on=True) == 0:
+                    _device.restore()
+                    restored_devices.append(_device)
 
-        restored_devices = []
-        for _device in __disabled_devices:
-            if _device.get_usage(if_on=True) == 0:
-                _device.restore()
-                restored_devices.append(_device)
-
-        for _device in restored_devices:
-            __disabled_devices.pop(__disabled_devices.index(_device))
+            for _device in restored_devices:
+                __disabled_devices.pop(__disabled_devices.index(_device))
 
     return logger
 
