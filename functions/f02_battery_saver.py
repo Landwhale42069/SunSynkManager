@@ -31,10 +31,11 @@ def logic(state):
     __battery_discharge_rate.append(battery_power.get_value())
     __battery_discharge_rate.pop(0)
 
-    if __trigger_count < 1:
-        __trigger_count = __trigger_every
-    else:
+    if not __trigger_count < 1:
         __trigger_count -= 1
+
+    else:
+        __trigger_count = __trigger_every
 
         current_percent = battery_soc.get_value()
         average_battery_power = sum(__battery_discharge_rate) / len(__battery_discharge_rate)
