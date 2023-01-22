@@ -54,7 +54,7 @@ class DeviceManager:
             'Content-Type': 'application/json;charset=UTF-8'
         }
 
-        self.logger.debug(f"Getting bearer token, headers: {self.headers}, body: {body}")
+        self.logger.debug(f"Getting bearer token...")
         request = requests.post('https://eu-api.coolkit.cc:8080/api/user/login',
                                 headers=self.headers, json=body)
 
@@ -228,29 +228,34 @@ class Device:
         body = {
             "deviceid": self.device_id,
             "params": {
-                "switch": state
             },
             "appid": APP_ID,
             "nonce": self.device_manager.generate_nonce(15),
             "ts": time.time(),
             "version": 8
         }
-        if self.__switches and outlet != -1:
+
+        if outlet == -1 and self.__switch is not None:
+            body['params'].update({
+                'switch': state
+            })
+        elif outlet != -1 and self.__switches is not None:
             switches = self.__switches
             for switch in switches:
                 if switch.get('outlet') == outlet:
                     switch.update({'switch': state})
-            body.update({'params': {"switches": switches}})
-        elif self.__switches and outlet == -1:
-            self.logger.error(f"Trying to set a mutli-channel switch with no outlet specified")
-            raise Exception(f"Trying to set a mutli-channel switch with no outlet specified")
+            body['params'].update({
+                'switches': switches
+            })
+        else:
+            error_message = f"Trying to set {self.name}'s outlet {outlet} to '{state}', but that is not possible"
+            self.logger.error(error_message)
+            raise Exception(error_message)
 
         request = requests.post(f'https://eu-api.coolkit.cc:8080/api/user/device/status',
                                 headers=self.device_manager.headers, json=json.dumps(body))
 
         response = request.json()
-
-        self.refresh(1)
 
         if 'error' in response and response.get('error') != 0:
             error_message = f"There was an issue when trying to switch {self.name} {state}, {response.get('error')}: {response.get('errmsg')}"
@@ -258,6 +263,7 @@ class Device:
             self.logger.debug(response)
             raise self.SetSwitchFailedException(error_message)
         else:
+            self.refresh(1)
             self.logger.debug(f"Successfully turned {self.name} {state}")
 
     def refresh(self, refresh_timer=__refresh_timer):
