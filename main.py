@@ -7,7 +7,7 @@ from datetime import datetime
 def main():
 
     # Create and set static logger for Device and Register
-    eWeLink.Device.logger = Logger.Logger('eWeLink')
+    eWeLink.DeviceManager.logger = Logger.Logger('eWeLink')
     Inverter.Register.logger = Logger.Logger('Inverter')
     Loadshedding.Tracker.logger = Logger.Logger('Loadshedding')
     Interface.WebAPI.logger = Logger.Logger('Interface')
@@ -15,10 +15,11 @@ def main():
     loadshedding = Loadshedding.Tracker("schedule.csv")
 
     # Define devices
-    dryer = eWeLink.Device('100168b564')
-    geyser1 = eWeLink.Device('10017e9016')
-    geyser1.expected_usage = 2100
-    geyser1.expected_activity = [
+    device_manager = eWeLink.DeviceManager()
+    dryer = device_manager.get_device('100168b564')
+    geyser_kitchen = device_manager.get_device('10017e9016')
+    geyser_kitchen.expected_usage = 2100
+    geyser_kitchen.expected_activity = [
         {
             'start': datetime.strptime('9:30', '%H:%M').time(),
             'end': datetime.strptime('10:30', '%H:%M').time(),
@@ -29,20 +30,11 @@ def main():
         },
     ]
 
-    geyser2 = eWeLink.Device('100178de05')
-    geyser2.expected_usage = 2100
+    geyser_bathroom = device_manager.get_device('100178de05')
+    geyser_bathroom.expected_usage = 2100
 
-    pool_pump = eWeLink.Device('1001793ec2')
+    pool_pump = device_manager.get_device('1001793ec2')
     pool_pump.expected_usage = 750
-    pool_pump.expected_activity = [
-        {
-            'start': datetime.strptime('8:00', '%H:%M').time(),
-            'end': datetime.strptime('16:00', '%H:%M').time(),
-        },
-    ]
-
-    stoep = eWeLink.Device('10012b9022')
-    marco_kamer = eWeLink.Device('1000f6e808')
 
     # Define registers
     battery_soc = Inverter.Register(184, "Battery SOC", -1, "%")
@@ -55,7 +47,7 @@ def main():
 
     argument_dict = {
         'loggers': {
-            "eWeLink": eWeLink.Device.logger,
+            "eWeLink": eWeLink.DeviceManager.logger,
             "Inverter": Inverter.Register.logger,
             "Loadshedding": Loadshedding.Tracker.logger,
             "Interface": Interface.WebAPI.logger,
@@ -63,11 +55,9 @@ def main():
         'loadshedding': loadshedding,
 
         'dryer': dryer,
-        'geyser1': geyser1,
-        'geyser2': geyser2,
+        'geyser_kitchen': geyser_kitchen,
+        'geyser_bathroom': geyser_bathroom,
         'pool_pump': pool_pump,
-        'stoep': stoep,
-        'marco_kamer': marco_kamer,
 
         'battery_soc': battery_soc,
         'battery_power': battery_power,
@@ -86,11 +76,11 @@ def main():
     argument_dict['f01_dryer_watchdog'] = t01_dryer_watchdog
     argument_dict['f02_battery_saver'] = t02_battery_saver
 
-    print()
-
     web_interface.startup()
     t01_dryer_watchdog.start()
     t02_battery_saver.start()
+
+    print()
 
 
 if __name__ == "__main__":

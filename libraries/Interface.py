@@ -43,11 +43,9 @@ class WebAPI:
 
             return_dict = [
                 self.info.get('dryer'),
-                self.info.get('geyser1'),
-                self.info.get('geyser2'),
+                self.info.get('geyser_kitchen'),
+                self.info.get('geyser_bathroom'),
                 self.info.get('pool_pump'),
-                self.info.get('stoep'),
-                self.info.get('marco_kamer'),
             ]
 
             return [_device.obj for _device in return_dict]
@@ -64,7 +62,7 @@ class WebAPI:
 
             _error = 'Specify deviceId'
             if device_id is not None and device_id != 'undefined':
-                self.logger.debug(f'Toggling device with device_id{device_id}')
+                self.logger.debug(f'Toggling device with device_id {device_id}')
                 try:
                     for _property in self.info:
                         device = self.info[_property]

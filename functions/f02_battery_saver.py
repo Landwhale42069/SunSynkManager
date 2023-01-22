@@ -54,8 +54,8 @@ def logic(state):
         logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
         device_list = [
-            state.get('geyser1'),
-            state.get('geyser2'),
+            state.get('geyser_kitchen'),
+            state.get('geyser_bathroom'),
             # state.get('pool_pump'),
         ]
 
