@@ -6,7 +6,7 @@ __battery_safety = 30
 __projected_duration = 2
 
 __sample_history = 10
-__trigger_every = 10
+__trigger_every = 30
 __trigger_count = __trigger_every
 
 __battery_discharge_rate = [0]*__sample_history

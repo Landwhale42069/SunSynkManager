@@ -16,7 +16,7 @@ class SunSynkInstrument(minimalmodbus.Instrument):
             self.serial.stopbits = 1
             self.serial.timeout = 0.2  # seconds
         except Exception as e:
-            print('Dev mode')
+            print(f'Dev mode, {e}')
 
         self._self_update()
 

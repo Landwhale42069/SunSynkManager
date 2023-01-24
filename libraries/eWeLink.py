@@ -102,13 +102,21 @@ class DeviceManager:
             t = Timer(10, self.refresh_loop, []).start()
 
         try:
-            self.refresh()
+            self.hard_refresh()
         except Exception as e:
             self.login()
             try:
-                self.refresh()
+                self.hard_refresh()
             except Exception as e:
                 self.run = False
+
+    def hard_refresh(self):
+        for device in self.refresh_list.keys():
+            _obj = self.old_get_device(device)
+            self.logger.info(f"{device}, hard refresh")
+
+            self.refresh_list[device] = _obj
+            self.devices[device] = _obj
 
     def refresh(self):
         for device in self.refresh_list.keys():
@@ -299,10 +307,11 @@ class Device:
 
         response = request.json()
 
+        self.logger.debug(f"Set switch request responded with {response}")
+
         if 'error' in response and response.get('error') != 0:
-            error_message = f"There was an issue when trying to switch {self.name} {state}, {response.get('error')}: {response.get('errmsg')}"
+            error_message = f"There was an issue when trying to switch {self.name}"
             self.logger.error(error_message)
-            self.logger.debug(response)
             raise Exception(error_message)
         else:
             self.refresh()
@@ -346,6 +355,7 @@ class Device:
                 return None
 
     def toggle(self, outlet=-1):
+        self.refresh()
         if outlet == -1:
             if self.switch == 'off':
                 self.on()

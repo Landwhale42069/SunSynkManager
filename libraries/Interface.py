@@ -30,7 +30,7 @@ class WebAPI:
         @self.app.route("/<location>")
         def alt_html(location):
             self.logger.debug(f'Getting {location}')
-            if location in ['manager', 'viewer']:
+            if location in ['administrator', 'basic']:
                 return base_html()
             else:
                 _file = os.path.join(os.getcwd(), interface_directory, location)
@@ -47,6 +47,8 @@ class WebAPI:
                 self.info.get('geyser_bathroom'),
                 self.info.get('pool_pump'),
             ]
+
+            [_device.refresh() for _device in return_dict]
 
             return [_device.obj for _device in return_dict]
 
