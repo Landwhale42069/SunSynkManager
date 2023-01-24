@@ -228,12 +228,6 @@ class Device:
         return False
 
     def shutdown(self):
-        # Store current state for self.restore later
-        self.shutdown_state = {
-            'switch': self.switch,
-            'switches': self.switches,
-        }
-
         # If main is on, turn off
         if self.switch == 'on':
             self.off()
@@ -244,19 +238,16 @@ class Device:
             if outlet.get('switch') == 'on':
                 self.off(outlet.get('outlet'))
 
-    def restore(self):
+    def startup(self):
         # If the main switch WAS on, and isnt anymore, turn on
-        _switch = self.shutdown_state.get('switch')
-        if _switch == 'on' and self.switch == 'off':
+        if self.switch == 'off':
             self.on()
 
-        # For all the outlets, if they WERE on, and arent anymore, turn on
-        restore_outlets = self.shutdown_state.get('switches') or []
-        current_outlets = self.switches or []
-
-        for i in range(len(current_outlets)):
-            if restore_outlets[i].get('switch') == 'on' and current_outlets[i].get('switch') == 'off':
-                self.on(current_outlets[i].get('outlet'))
+        # For each outlet:
+        for outlet in (self.switches or []):
+            # If the switch is on, turn it off:
+            if outlet.get('switch') == 'off':
+                self.on(outlet.get('outlet'))
 
     def on(self, outlet=-1):
         try:

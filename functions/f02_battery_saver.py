@@ -53,34 +53,62 @@ def logic(state):
 
         logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
-        device_list = [
-            state.get('geyser_kitchen'),
-            state.get('geyser_bathroom'),
-            # state.get('pool_pump'),
-        ]
+        geyser_kitchen = state.get('geyser_kitchen')
+        geyser_bathroom = state.get('geyser_bathroom')
+        pool_pump = state.get('pool_pump')
 
         if power_to_drop > 0:
-            for _device in device_list:
-                _expected_usage = _device.get_usage()
 
-                # If the device's expected usage needs to be dropped, and the device isn't disabled
-                if _expected_usage < power_to_drop and not __disabled_devices.__contains__(_device):
-                    logger.info(f"{_device.name} is using ~{_expected_usage} W, turning it off")
-                    power_to_drop -= _expected_usage
-                    _device.shutdown()
+            _device = geyser_kitchen
+            _usage = _device.get_usage()
+            if power_to_drop > _usage:
+                logger.debug(f"{_device.name} is using {_usage} W, turning off")
+                power_to_drop -= _usage
+                _device.shutdown()
 
-                    if _device.device_id != '100178de05':
-                        __disabled_devices.append(_device)
+            _device = geyser_bathroom
+            _usage = _device.get_usage()
+            if power_to_drop > _usage:
+                logger.debug(f"{_device.name} is using {_usage} W, turning off")
+                power_to_drop -= _usage
+                _device.shutdown()
+
+            _device = pool_pump
+            _usage = _device.get_usage()
+            if power_to_drop > _usage:
+                logger.debug(f"{_device.name} is using {_usage} W, turning off")
+                power_to_drop -= _usage
+                _device.shutdown()
+
         else:
-            restored_devices = []
-            for _device in __disabled_devices:
-                if _device.get_usage(if_on=True) == 0:
-                    logger.info(f"{_device.name} isn't going to use power now... Resetting it's state")
-                    _device.restore()
-                    restored_devices.append(_device)
 
-            for _device in restored_devices:
-                __disabled_devices.pop(__disabled_devices.index(_device))
+            _device = geyser_kitchen
+            _usage = _device.get_usage(if_on=True)
+            if -power_to_drop > _usage:
+                logger.debug(f"{_device.name} will use {_usage} W, turning on")
+                power_to_drop += _usage
+                _device.startup()
+
+            try:
+
+                _device = geyser_bathroom
+                _usage = _device.get_usage(if_on=True)
+                _temp = float(_device.get('obj').get('params').get("currentTemperature"))
+                if -power_to_drop > _usage and _temp < 44.5:
+                    logger.debug(f"{_device.name} will use {_usage} W, turning on")
+                    power_to_drop += _usage
+                    _device.startup()
+            except Exception as e:
+                logger.warning(f"Error when trying to turn {geyser_bathroom.name} back on, {e}")
+
+            _device = pool_pump
+            _usage = _device.get_usage(if_on=True)
+            _start = datetime.now().replace(hour=6, minute=30, second=0, microsecond=0)
+            _end = datetime.now().replace(hour=17, minute=30, second=0, microsecond=0)
+            if -power_to_drop > _usage and _start < datetime.now() < _end:
+                logger.debug(f"{_device.name} will use {_usage} W, turning on")
+                power_to_drop += _usage
+                _device.startup()
 
     state['loggers']['f02_battery_saver'] = logger
 
