@@ -103,8 +103,8 @@ def logic(state):
 
             _device = pool_pump
             _usage = _device.get_usage(if_on=True)
-            _start = datetime.now().replace(hour=6, minute=30, second=0, microsecond=0)
-            _end = datetime.now().replace(hour=17, minute=30, second=0, microsecond=0)
+            _start = datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
+            _end = datetime.now().replace(hour=15, minute=30, second=0, microsecond=0)
             if -power_to_drop > _usage and _start < datetime.now() < _end:
                 logger.debug(f"{_device.name} will use {_usage} W, turning on")
                 power_to_drop += _usage
