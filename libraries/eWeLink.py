@@ -20,20 +20,31 @@ class DeviceManager:
         self.bearer_token = None
         self.user_apikey = None
 
+        self.email = None
+        self.password = None
+        self.dev_mode = False
+
         self.devices = {}
         self.refresh_list = {}
 
-        self.login()
+        try:
+            with open('credentials.csv', 'r') as f:
+                credentials = f.readline()
+                self.email, self.password = credentials.split(',')
+                self.login(self.email, self.password)
+        except FileNotFoundError as e:
+            print('eWeLink-DEV')
+            self.dev_mode = True
+
         self.populate()
 
         self.run = True
         self.refresh_loop()
 
-    def login(self, credentials_file='credentials.csv'):
+    def login(self, email=None, password=None):
         self.logger.debug("Logging into eWeLink")
-        with open(credentials_file, 'r') as f:
-            credentials = f.readline()
-            email, password = credentials.split(',')
+        if email is None and password is None:
+            return
 
         body = {
             "appid": APP_ID,
@@ -76,6 +87,23 @@ class DeviceManager:
         return ''.join([str(random.randint(0, 9)) for i in range(length)])
 
     def get_devices(self):
+        if self.dev_mode:
+            return [
+                {
+                    'name': 'Dev Device 1',
+                    'params': {
+                        'switch': 'off',
+                        'switches': [
+                            {
+                                'switch': 'off',
+                                'outlet': 0
+                            }
+                        ],
+                        'power': 2153
+                    },
+                    'deviceid': device_id,
+                } for device_id in ['100168b564', '10017e9016', '100178de05', '1001793ec2']]
+
         params = {
             "lang": 'en',
             "appid": APP_ID,
@@ -115,11 +143,17 @@ class DeviceManager:
             self.refresh_loop()
 
     def hard_refresh(self):
+        if self.dev_mode:
+            return
+
         for device in self.refresh_list.keys():
             self.hard_reload_device(device)
             self.logger.info(f"{device}, hard refresh")
 
     def refresh(self):
+        if self.dev_mode:
+            return
+
         for device in self.refresh_list.keys():
             params = self.get_params(device)
 
@@ -128,6 +162,9 @@ class DeviceManager:
                 self.refresh_list[device]['params'][param] = params[param]
 
     def get_params(self, device_id):
+        if self.dev_mode:
+            return
+
         self.logger.debug(f"Getting parameters of {self.devices[device_id]['name']} ({device_id})")
         params = {
             "deviceid": device_id,
