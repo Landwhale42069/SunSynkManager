@@ -1,39 +1,50 @@
 from threading import Timer
-import os
+from libraries import Logger
 
 
-class IntervalTask:
-    def __init__(self, interval, function, arguments):
-        self.__run = False
-        self.__arguments = arguments
-        self.__interval = interval
-        self.__function = function
+class Task:
+    def __init__(self, interval):
+        self.run = False
+        self.interval = interval
         self.__timer = None
+        self.__logger = Logger.Logger(self.__class__.__name__)
 
-    @property
-    def active(self):
-        return self.__run
+    def logic(self):
+        raise Exception("Needs to be implemented by a child class")
 
     def set_interval(self, new_interval):
-        self.__interval = new_interval
+        self.interval = new_interval
 
     def start(self):
-        self.__run = True
-        self.loop(self.__function, self.__arguments)
+        self.run = True
+        self.loop()
+
+        return self
 
     def stop(self):
-        self.__run = False
+        self.run = False
 
-    def loop(self, function, arguments):
-        if not self.__run:
+    def loop(self):
+        if not self.run:
             return
 
-        timer = Timer(self.__interval, self.loop, [function, arguments]).start()
+        timer = Timer(self.interval, self.loop, []).start()
         if not self.__timer:
             self.__timer = timer
 
         try:
-            function(*arguments)
+            self.logic()
         except Exception as e:
-            self.__run = False
+            self.run = False
             raise e
+
+    def get_config(self):
+        def contains_name(pair):
+            key, value = pair
+            # if self.__class__.__name__ in key:
+            if "__" in key:
+                return False
+            else:
+                return True
+
+        return dict(filter(contains_name, self.__dict__.items()))

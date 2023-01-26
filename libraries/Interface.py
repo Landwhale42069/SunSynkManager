@@ -4,6 +4,8 @@ import logging
 import threading
 import os
 
+import libraries.Inverter
+
 
 class WebAPI:
     logger = None
@@ -39,13 +41,12 @@ class WebAPI:
         # Host device data
         @self.app.route("/api/devices")
         def devices():
-            self.logger.debug('Getting devices')
-
+            _devices = self.info.get('devices')
             return_dict = [
-                self.info.get('dryer'),
-                self.info.get('geyser_kitchen'),
-                self.info.get('geyser_bathroom'),
-                self.info.get('pool_pump'),
+                _devices.get('dryer'),
+                _devices.get('geyser_kitchen'),
+                _devices.get('geyser_bathroom'),
+                _devices.get('pool_pump'),
             ]
 
             [_device.refresh() for _device in return_dict]
@@ -66,8 +67,8 @@ class WebAPI:
             if device_id is not None and device_id != 'undefined':
                 self.logger.debug(f'Toggling device with device_id {device_id}')
                 try:
-                    for _property in self.info:
-                        device = self.info[_property]
+                    for _property in self.info['devices']:
+                        device = self.info['devices'][_property]
                         if hasattr(device, 'device_id'):
                             if device.device_id == device_id:
                                 device.toggle(outlet)
@@ -86,16 +87,15 @@ class WebAPI:
         # Host inverter data
         @self.app.route("/api/inverter")
         def inverter():
-            self.logger.debug('Getting inverter')
-
+            _registers = self.info['registers']
             return_dict = [
-                self.info.get('battery_soc'),
-                self.info.get('battery_power'),
-                self.info.get('grid_power'),
-                self.info.get('load_power'),
-                self.info.get('pv1_power'),
-                self.info.get('pv2_power'),
-                self.info.get('grid_status'),
+                _registers.get('battery_soc'),
+                _registers.get('battery_power'),
+                _registers.get('grid_power'),
+                _registers.get('load_power'),
+                _registers.get('pv1_power'),
+                _registers.get('pv2_power'),
+                _registers.get('grid_status'),
             ]
 
             return_dict = [{
@@ -117,11 +117,11 @@ class WebAPI:
         def tasks():
             self.logger.debug('Getting tasks')
 
-            task_list = ['f01_dryer_watchdog', 'f02_battery_saver']
+            task_list = self.info['tasks']
 
             return_dict = [{
                 "name": task,
-                "active": self.info.get(task).active,
+                "active": self.info["tasks"][task].active,
             } for task in task_list]
 
             return return_dict
@@ -133,12 +133,10 @@ class WebAPI:
 
             loggers = self.info.get('loggers')
 
-            other_logs = ['f01_dryer_watchdog', 'f02_battery_saver', "eWeLink", "Inverter", "Loadshedding", "Interface"]
-
             return_dict = [{
-                    'name': logs,
-                    'logs': self.get_logs(loggers.get(logs).directory, logs),
-                } for logs in other_logs]
+                    'name': _logger,
+                    'logs': self.get_logs(loggers.get(_logger).directory, _logger),
+                } for _logger in loggers]
 
             return return_dict
 

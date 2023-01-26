@@ -102,21 +102,22 @@ class DeviceManager:
             t = Timer(10, self.refresh_loop, []).start()
 
         try:
-            self.hard_refresh()
-        except Exception as e:
-            self.login()
-            try:
+            if self.run:
                 self.hard_refresh()
-            except Exception as e:
-                self.run = False
+        except Exception as e:
+            self.logger.warning(f"The refresh loop failed here, {e}")
+            self.run = False
+            time.sleep(10)
+
+            # Log back in
+            self.login()
+            self.run = True
+            self.refresh_loop()
 
     def hard_refresh(self):
         for device in self.refresh_list.keys():
-            _obj = self.old_get_device(device)
+            self.hard_reload_device(device)
             self.logger.info(f"{device}, hard refresh")
-
-            self.refresh_list[device] = _obj
-            self.devices[device] = _obj
 
     def refresh(self):
         for device in self.refresh_list.keys():
@@ -154,7 +155,7 @@ class DeviceManager:
 
         return Device(device_id, self, self.logger)
 
-    def old_get_device(self, device_id):
+    def hard_reload_device(self, device_id):
         params = {
             "deviceid": device_id,
             "appid": APP_ID,
@@ -173,6 +174,9 @@ class DeviceManager:
         if 'error' in response and response.get('error') != 0:
             raise Exception(f"Error while getting device {device_id}, {response}")
 
+        self.devices[device_id] = response
+        self.refresh_list[device_id] = response
+
         return response
 
 
@@ -186,7 +190,6 @@ class Device:
 
         self.expected_usage = 0
         self.expected_activity = None
-        self.shutdown_state = {}
 
         self.logger.info(f"Successfully created {self.__str__()}")
 
@@ -361,6 +364,8 @@ class Device:
                 self.off(outlet)
             else:
                 raise Exception('Trying to toggle a device outlet that returns None')
+
+        self.device_manager.hard_reload_device(self.device_id)
 
     def __str__(self):
         return f"<{self.name} Device>"

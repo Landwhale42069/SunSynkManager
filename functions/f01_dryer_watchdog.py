@@ -1,52 +1,58 @@
 from datetime import datetime, timedelta
 from libraries import Logger
+from libraries.Schedular import Task
 
-__loadshedding_ends = None
 
+class DryerWatchdogTask(Task):
+    def __init__(self, arguments):
+        self._Task__logger = None
+        super().__init__(60)
+        self.__arguments = arguments
+        self.__arguments['loggers']['f01_dryer_watchdog'] = self._Task__logger
 
-def logic(state):
-    global __loadshedding_ends
-    logger = Logger.Logger('f01_dryer_watchdog')
-    logger.info(f"------------------------------------------")
+        self.loadshedding_ends = None
+        self.loadshedding_status = None
 
-    loadshedding = state.get('loadshedding')
-    grid_status = state.get('grid_status')
-    dryer = state.get('dryer')
+    def logic(self):
+        self._Task__logger.update_file_handler()
+        self._Task__logger.info(f"------------------------------------------")
 
-    loadshedding_status = loadshedding.get_next()
-    logger.info(f"Next loadshedding schedule: {loadshedding_status}")
-    currently_loadshedding = False
-    if loadshedding_status:
-        ls_window_start = loadshedding_status['_start'] - timedelta(minutes=3)
-        ls_window_end = loadshedding_status['_start'] + timedelta(minutes=60)
-        currently_loadshedding = ls_window_start < datetime.now() < ls_window_end
+        loadshedding = self.__arguments['helpers']['loadshedding']
+        grid_status = self.__arguments['registers']['grid_status']
+        dryer = self.__arguments['devices']['dryer']
 
-        if currently_loadshedding and not __loadshedding_ends:
-            __loadshedding_ends = ls_window_end
+        self.loadshedding_status = loadshedding.get_next()
+        self._Task__logger.info(f"Next loadshedding schedule: {self.loadshedding_status}")
+        currently_loadshedding = False
+        if self.loadshedding_status:
+            ls_window_start = self.loadshedding_status['_start'] - timedelta(minutes=3)
+            ls_window_end = self.loadshedding_status['_start'] + timedelta(minutes=60)
+            currently_loadshedding = ls_window_start < datetime.now() < ls_window_end
 
-    grid_power = True if grid_status.get_value() == 1 else False
+            if currently_loadshedding and not self.loadshedding_ends:
+                self.loadshedding_ends = ls_window_end
 
-    logger.info(f"Checking if the dryer needs to be turned off")
-    logger.debug(f"\tloadshedding{currently_loadshedding:>20}")
-    logger.debug(f"\tgrid_power  {grid_power:>20}")
+        grid_power = True if grid_status.get_value() == 1 else False
 
-    # If no grid or there is a loadshedding schedule now
-    if not grid_power or currently_loadshedding:
-        logger.debug(f"Dryer needs to be off, currently is: {dryer.switch}")
+        self._Task__logger.info(f"Checking if the dryer needs to be turned off")
+        self._Task__logger.debug(f"\tloadshedding{currently_loadshedding:>20}")
+        self._Task__logger.debug(f"\tgrid_power  {grid_power:>20}")
 
-        if dryer.switch == 'on':
-            logger.info(f'Turning {dryer} off')
-            dryer.off()
+        # If no grid or there is a loadshedding schedule now
+        if not grid_power or currently_loadshedding:
+            self._Task__logger.debug(f"Dryer needs to be off, currently is: {dryer.switch}")
 
-    # Else, if there was loadshedding, and the end date for the loadshedding has passed, and there is grid
-    # Or there is grid power and there was no loadshedding
-    elif (__loadshedding_ends and datetime.now() > __loadshedding_ends and grid_power) or \
-            (grid_power and not __loadshedding_ends):
-        __loadshedding_ends = None
-        logger.info(f"Turning dryer on, currently {dryer.switch}")
+            if dryer.switch == 'on':
+                self._Task__logger.info(f'Turning {dryer} off')
+                dryer.off()
 
-        if dryer.switch == 'off':
-            logger.info(f'Turning {dryer} on')
-            dryer.on()
+        # Else, if there was loadshedding, and the end date for the loadshedding has passed, and there is grid
+        # Or there is grid power and there was no loadshedding
+        elif (self.loadshedding_ends and datetime.now() > self.loadshedding_ends and grid_power) or \
+                (grid_power and not self.loadshedding_ends):
+            self.loadshedding_ends = None
+            self._Task__logger.info(f"Turning dryer on, currently {dryer.switch}")
 
-    state['loggers']['f01_dryer_watchdog'] = logger
+            if dryer.switch == 'off':
+                self._Task__logger.info(f'Turning {dryer} on')
+                dryer.on()

@@ -1,11 +1,10 @@
-from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Schedular
+from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface
 from functions import f01_dryer_watchdog, f02_battery_saver
 
 from datetime import datetime
 
 
 def main():
-
     # Create and set static logger for Device and Register
     eWeLink.DeviceManager.logger = Logger.Logger('eWeLink')
     Inverter.Register.logger = Logger.Logger('Inverter')
@@ -52,29 +51,36 @@ def main():
             "Loadshedding": Loadshedding.Tracker.logger,
             "Interface": Interface.WebAPI.logger,
         },
-        'loadshedding': loadshedding,
+        "helpers": {
+            'loadshedding': loadshedding,
+        },
+        "devices": {
+            'dryer': dryer,
+            'geyser_kitchen': geyser_kitchen,
+            'geyser_bathroom': geyser_bathroom,
+            'pool_pump': pool_pump,
+        },
+        "registers": {
+            'battery_soc': battery_soc,
+            'battery_power': battery_power,
+            'grid_power': grid_power,
+            'load_power': load_power,
+            'pv1_power': pv1_power,
+            'pv2_power': pv2_power,
+            'grid_status': grid_status,
+        },
+        "tasks": {
 
-        'dryer': dryer,
-        'geyser_kitchen': geyser_kitchen,
-        'geyser_bathroom': geyser_bathroom,
-        'pool_pump': pool_pump,
-
-        'battery_soc': battery_soc,
-        'battery_power': battery_power,
-        'grid_power': grid_power,
-        'load_power': load_power,
-        'pv1_power': pv1_power,
-        'pv2_power': pv2_power,
-        'grid_status': grid_status,
+        },
     }
 
     web_interface = Interface.WebAPI("interface", argument_dict)
 
-    t01_dryer_watchdog = Schedular.IntervalTask(60, f01_dryer_watchdog.logic, [argument_dict])
-    t02_battery_saver = Schedular.IntervalTask(10, f02_battery_saver.logic, [argument_dict])
+    t01_dryer_watchdog = f01_dryer_watchdog.DryerWatchdogTask(argument_dict)
+    t02_battery_saver = f02_battery_saver.BatterySaverTask(argument_dict)
 
-    argument_dict['f01_dryer_watchdog'] = t01_dryer_watchdog
-    argument_dict['f02_battery_saver'] = t02_battery_saver
+    argument_dict["tasks"]['f01_dryer_watchdog'] = t01_dryer_watchdog
+    argument_dict["tasks"]['f02_battery_saver'] = t02_battery_saver
 
     web_interface.startup()
     t01_dryer_watchdog.start()
