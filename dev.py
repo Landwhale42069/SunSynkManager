@@ -8,5 +8,7 @@ config = {
 a = BatterySaverTask(config)
 b = DryerWatchdogTask(config)
 
+print(a.task_id, b.task_id)
+
 print()
 

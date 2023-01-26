@@ -90,7 +90,7 @@ class DeviceManager:
         if self.dev_mode:
             return [
                 {
-                    'name': 'Dev Device 1',
+                    'name': f'Dev Device {i+1}',
                     'params': {
                         'switch': 'off',
                         'switches': [
@@ -102,7 +102,7 @@ class DeviceManager:
                         'power': 2153
                     },
                     'deviceid': device_id,
-                } for device_id in ['100168b564', '10017e9016', '100178de05', '1001793ec2']]
+                } for i, device_id in enumerate(['100168b564', '10017e9016', '100178de05', '1001793ec2'])]
 
         params = {
             "lang": 'en',
@@ -193,6 +193,8 @@ class DeviceManager:
         return Device(device_id, self, self.logger)
 
     def hard_reload_device(self, device_id):
+        if self.dev_mode:
+            return
         params = {
             "deviceid": device_id,
             "appid": APP_ID,
@@ -306,6 +308,8 @@ class Device:
             self.set_switch('off', outlet)
 
     def set_switch(self, state, outlet=-1):
+        if self.device_manager.dev_mode:
+            return
         body = {
             "deviceid": self.device_id,
             "params": {
@@ -386,7 +390,6 @@ class Device:
                 return None
 
     def toggle(self, outlet=-1):
-        self.refresh()
         if outlet == -1:
             if self.switch == 'off':
                 self.on()

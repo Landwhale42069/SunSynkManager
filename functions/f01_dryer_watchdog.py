@@ -6,12 +6,23 @@ from libraries.Schedular import Task
 class DryerWatchdogTask(Task):
     def __init__(self, arguments):
         self._Task__logger = None
-        super().__init__(60)
+        super().__init__(60, 'Dryer Watchdog',
+                         "Estimates loadshedding, then ensures the tumble dryer device can't be activate while the power is out")
         self.__arguments = arguments
         self.__arguments['loggers']['f01_dryer_watchdog'] = self._Task__logger
 
         self.loadshedding_ends = None
         self.loadshedding_status = None
+
+        self.outputs = {
+            'gridStatus': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Grid Status',
+                    'value': True,
+                }
+            }
+        }
 
     def logic(self):
         self._Task__logger.update_file_handler()
@@ -56,3 +67,13 @@ class DryerWatchdogTask(Task):
             if dryer.switch == 'off':
                 self._Task__logger.info(f'Turning {dryer} on')
                 dryer.on()
+
+        self.outputs = {
+            'gridStatus': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Grid Status',
+                    'value': grid_status,
+                }
+            }
+        }

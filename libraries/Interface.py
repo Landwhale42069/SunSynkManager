@@ -16,8 +16,8 @@ class WebAPI:
 
         self.app = Flask(__name__)
         # Disable logging
-        log = logging.getLogger('werkzeug')
-        log.disabled = True
+        # log = logging.getLogger('werkzeug')
+        # log.disabled = True
 
         self.cors = CORS(self.app, resources={r"/*": {"origins": "*"}})
 
@@ -120,11 +120,31 @@ class WebAPI:
             task_list = self.info['tasks']
 
             return_dict = [{
-                "name": task,
-                "active": self.info["tasks"][task].active,
+                "name": self.info["tasks"][task].name,
+                "description": self.info["tasks"][task].description,
+                "taskId": self.info["tasks"][task].task_id,
             } for task in task_list]
 
             return return_dict
+
+        # Host track data
+        @self.app.route("/api/task/config")
+        def get_task_config():
+            task_id = request.args.get('taskId')
+            if task_id is None:
+                return {
+                    'error': 'taskId is required'
+                }
+            self.logger.debug(f'Getting Task {task_id}\'s config')
+
+            task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
+
+            if len(task) != 1:
+                return {
+                    'error': f'Expected 1 task with the taskId {task_id}, instead got {len(task)}'
+                }
+
+            return task[0].get_config()
 
         # Host track data
         @self.app.route("/api/logs")
