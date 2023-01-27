@@ -127,7 +127,6 @@ class WebAPI:
 
             return return_dict
 
-        # Host track data
         @self.app.route("/api/task/config")
         def get_task_config():
             task_id = request.args.get('taskId')
@@ -145,6 +144,30 @@ class WebAPI:
                 }
 
             return task[0].get_config()
+
+        @self.app.route("/api/task/config", methods=['POST'])
+        def set_task_config():
+            task_id = request.args.get('taskId')
+            body = request.json
+
+            if task_id is None:
+                return {
+                    'error': 'taskId is required'
+                }
+            self.logger.debug(f'Getting Task {task_id}\'s config')
+
+            task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
+
+            if len(task) != 1:
+                return {
+                    'error': f'Expected 1 task with the taskId {task_id}, instead got {len(task)}'
+                }
+
+            task[0].set_config(body)
+
+            return {
+                'success': True,
+            }
 
         # Host track data
         @self.app.route("/api/logs")
