@@ -127,47 +127,45 @@ class WebAPI:
 
             return return_dict
 
-        @self.app.route("/api/task/config")
-        def get_task_config():
+        @self.app.route("/api/task/config", methods=['GET', 'POST'])
+        def task_config():
             task_id = request.args.get('taskId')
-            if task_id is None:
-                return {
-                    'error': 'taskId is required'
-                }
-            self.logger.debug(f'Getting Task {task_id}\'s config')
-
-            task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
-
-            if len(task) != 1:
-                return {
-                    'error': f'Expected 1 task with the taskId {task_id}, instead got {len(task)}'
-                }
-
-            return task[0].get_config()
-
-        @self.app.route("/api/task/config", methods=['POST'])
-        def set_task_config():
-            task_id = request.args.get('taskId')
-            body = request.json
 
             if task_id is None:
                 return {
                     'error': 'taskId is required'
                 }
-            self.logger.debug(f'Getting Task {task_id}\'s config')
-
             task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
-
             if len(task) != 1:
                 return {
-                    'error': f'Expected 1 task with the taskId {task_id}, instead got {len(task)}'
+                    'error': f'Invalid taskId, {task_id}'
                 }
 
-            task[0].set_config(body)
+            if request.method == 'GET':
+                self.logger.debug(f'Getting Task {task_id}\'s config')
+                return task[0].get_config()
+            elif request.method == 'POST':
+                body = request.json
+                self.logger.debug(f'Setting Task {task_id}\'s config to {body}')
+                task[0].set_config(body)
+                return {'success': True}
 
-            return {
-                'success': True,
-            }
+        @self.app.route("/api/task/output")
+        def task_output():
+            task_id = request.args.get('taskId')
+
+            if task_id is None:
+                return {
+                    'error': 'taskId is required'
+                }
+            task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
+            if len(task) != 1:
+                return {
+                    'error': f'Invalid taskId, {task_id}'
+                }
+
+            self.logger.debug(f'Getting Task {task_id}\'s output')
+            return task[0].outputs
 
         # Host track data
         @self.app.route("/api/logs")
