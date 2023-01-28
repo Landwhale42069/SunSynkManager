@@ -1,14 +1,16 @@
-from functions.f02_battery_saver import BatterySaverTask
-from functions.f01_dryer_watchdog import DryerWatchdogTask
+from threading import Timer
 
-config = {
-    "loggers": {}
-}
 
-a = BatterySaverTask(config)
-b = DryerWatchdogTask(config)
+class Test:
+    def __init__(self):
+        self.name = 'Marco'
 
-print(a.task_id, b.task_id)
 
+def loop(a):
+    t = Timer(2, loop, [a]).start()
+    print(a.name)
+
+
+marco = Test()
+loop(marco)
 print()
-

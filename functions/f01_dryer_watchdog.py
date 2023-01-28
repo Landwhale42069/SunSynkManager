@@ -21,6 +21,13 @@ class DryerWatchdogTask(Task):
                     'title': 'Grid Status',
                     'value': True,
                 }
+            },
+            'NextLoadshedding': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Loadshedding starts in: (hrs)',
+                    'value': 0,
+                }
             }
         }
 
@@ -73,7 +80,14 @@ class DryerWatchdogTask(Task):
                 'type': 'SimpleDisplay',
                 'content': {
                     'title': 'Grid Status',
-                    'value': grid_status,
+                    'value': grid_power,
+                }
+            },
+            'NextLoadshedding': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Loadshedding starts in: (hrs)',
+                    'value': round((self.loadshedding_status or {}).get('start') or 0, 2),
                 }
             }
         }

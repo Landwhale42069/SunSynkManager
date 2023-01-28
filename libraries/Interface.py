@@ -16,8 +16,8 @@ class WebAPI:
 
         self.app = Flask(__name__)
         # Disable logging
-        # log = logging.getLogger('werkzeug')
-        # log.disabled = True
+        log = logging.getLogger('werkzeug')
+        log.disabled = True
 
         self.cors = CORS(self.app, resources={r"/*": {"origins": "*"}})
 
@@ -165,7 +165,8 @@ class WebAPI:
                 }
 
             self.logger.debug(f'Getting Task {task_id}\'s output')
-            return task[0].outputs
+            output = task[0].get_output()
+            return output
 
         # Host track data
         @self.app.route("/api/logs")
