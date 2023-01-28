@@ -141,10 +141,22 @@ class BatterySaverTask(Task):
 
             self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
-            self.outputs['currentBattery']['content']['value'] = round(current_percent, 2)
-            self.outputs['averageUsage']['content']['value'] = round(average_battery_power, 2)
-            self.outputs['expectedBattery']['content']['value'] = round(expected_percentage_left, 2)
-            self.outputs['shedAmount']['content']['value'] = round(power_to_drop, 2)
+            self.outputs['currentBattery']['content'] = {
+                    'title': 'Current battery (%)',
+                    'value': 100,
+                }
+            self.outputs['averageUsage']['content'] = {
+                    'title': 'Average usage (W)',
+                    'value': 0,
+                }
+            self.outputs['expectedBattery']['content'] = {
+                    'title': 'Expected battery (%)',
+                    'value': 0,
+                }
+            self.outputs['shedAmount']['content'] = {
+                    'title': 'Will try to drop (w)',
+                    'value': 0,
+                }
 
             # if power_to_drop > 0:
             #
