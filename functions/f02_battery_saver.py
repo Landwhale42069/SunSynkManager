@@ -143,19 +143,19 @@ class BatterySaverTask(Task):
 
             self.outputs['currentBattery']['content'] = {
                     'title': 'Current battery (%)',
-                    'value': 100,
+                    'value': round(current_percent, 2),
                 }
             self.outputs['averageUsage']['content'] = {
                     'title': 'Average usage (W)',
-                    'value': 0,
+                    'value': round(average_battery_power, 2),
                 }
             self.outputs['expectedBattery']['content'] = {
                     'title': 'Expected battery (%)',
-                    'value': 0,
+                    'value': round(expected_percentage_left, 2),
                 }
             self.outputs['shedAmount']['content'] = {
                     'title': 'Will try to drop (w)',
-                    'value': 0,
+                    'value': round(power_to_drop, 2),
                 }
 
             # if power_to_drop > 0:
