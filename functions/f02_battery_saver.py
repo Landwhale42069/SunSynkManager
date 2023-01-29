@@ -13,7 +13,6 @@ class BatterySaverTask(Task):
         self.__arguments['loggers']['f02_battery_saver'] = self._Task__logger
 
         self.config__battery_Wh_capacity = 10800
-        self.config__battery_safety = 30
         self.config__projected_duration = 2
         self.config__trigger_every = 30
         self.config__ideal_value = 40
@@ -111,102 +110,96 @@ class BatterySaverTask(Task):
         self.__sample_buffer.append(battery_power.get_value())
         self.__sample_buffer.pop(0)
 
-        if not self.__trigger_count < 1:
-            self.__trigger_count -= 1
+        __trigger_count = self.config__trigger_every
 
-            # New X Data
-            self.outputs['predictionPlot']['content']['series'][0] = {
-                            'name': 'Battery Power',
-                            'data': self.__sample_buffer
-                        }
-        else:
-            self._Task__logger.info(f"------------------------------------------")
-            __trigger_count = self.config__trigger_every
+        current_percent = battery_soc.get_value()
+        average_battery_power = sum(self.__sample_buffer) / len(self.__sample_buffer)
+        power_left = (current_percent / 100) * self.config__battery_Wh_capacity
 
-            current_percent = battery_soc.get_value()
-            average_battery_power = sum(self.__sample_buffer) / len(self.__sample_buffer)
-            power_left = (current_percent / 100) * self.config__battery_Wh_capacity
+        expected_percentage_left = ((
+                                                power_left - average_battery_power * self.config__projected_duration) / self.config__battery_Wh_capacity) * 100
 
-            expected_percentage_left = ((
-                                                    power_left - average_battery_power * self.config__projected_duration) / self.config__battery_Wh_capacity) * 100
+        self._Task__logger.debug(f"\tCurrent       | {round(current_percent, 2):>20} %")
+        self._Task__logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
+        self._Task__logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
 
-            self._Task__logger.debug(f"\tCurrent       | {round(current_percent, 2):>20} %")
-            self._Task__logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
-            self._Task__logger.debug(f"\tExpected left | {round(expected_percentage_left, 2):>20} %")
+        missing_percentage = self.config__ideal_value - expected_percentage_left
+        # Power to drop = missing power (Wh) * time to recover (1/h) * ratio
+        power_to_drop = (missing_percentage / 100) * self.config__battery_Wh_capacity * (
+                    1 / self.config__projected_duration) * self.config__factor
 
-            missing_percentage = self.config__ideal_value - expected_percentage_left
-            # Power to drop = missing power (Wh) * time to recover (1/h) * ratio
-            power_to_drop = (missing_percentage / 100) * self.config__battery_Wh_capacity * (
-                        1 / self.config__projected_duration) * self.config__factor
+        self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
-            self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
+        self.outputs['currentBattery']['content'] = {
+                'title': 'Current battery',
+                'value': f"{round(current_percent, 2)} %",
+            }
+        self.outputs['averageUsage']['content'] = {
+                'title': 'Average usage',
+                'value': f"{round(average_battery_power, 2)} W",
+            }
+        self.outputs['expectedBattery']['content'] = {
+                'title': 'Expected battery',
+                'value': f"{round(expected_percentage_left, 2)} %",
+            }
+        self.outputs['shedAmount']['content'] = {
+                'title': 'Will try to drop',
+                'value': f"{round(power_to_drop, 2)} W",
+            }
+        self.outputs['predictionPlot']['content']['series'][0] = {
+            'name': 'Battery Power',
+            'data': self.__sample_buffer
+        }
 
-            self.outputs['currentBattery']['content'] = {
-                    'title': 'Current battery (%)',
-                    'value': round(current_percent, 2),
-                }
-            self.outputs['averageUsage']['content'] = {
-                    'title': 'Average usage (W)',
-                    'value': round(average_battery_power, 2),
-                }
-            self.outputs['expectedBattery']['content'] = {
-                    'title': 'Expected battery (%)',
-                    'value': round(expected_percentage_left, 2),
-                }
-            self.outputs['shedAmount']['content'] = {
-                    'title': 'Will try to drop (w)',
-                    'value': round(power_to_drop, 2),
-                }
-
-            # if power_to_drop > 0:
-            #
-            #     _device = geyser_kitchen
-            #     _usage = _device.get_usage()
-            #     if power_to_drop > _usage:
-            #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
-            #         power_to_drop -= _usage
-            #         _device.shutdown()
-            #
-            #     _device = geyser_bathroom
-            #     _usage = _device.get_usage()
-            #     if power_to_drop > _usage:
-            #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
-            #         power_to_drop -= _usage
-            #         _device.shutdown()
-            #
-            #     _device = pool_pump
-            #     _usage = _device.get_usage()
-            #     if power_to_drop > _usage:
-            #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
-            #         power_to_drop -= _usage
-            #         _device.shutdown()
-            #
-            # else:
-            #
-            #     _device = geyser_kitchen
-            #     _usage = _device.get_usage(if_on=True)
-            #     if -power_to_drop > _usage:
-            #         self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
-            #         power_to_drop += _usage
-            #         _device.startup()
-            #
-            #     try:
-            #
-            #         _device = geyser_bathroom
-            #         _usage = _device.get_usage(if_on=True)
-            #         _temp = float(_device.get('obj').get('params').get("currentTemperature"))
-            #         if -power_to_drop > _usage and _temp < 44.5:
-            #             self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
-            #             power_to_drop += _usage
-            #             _device.startup()
-            #     except Exception as e:
-            #         self._Task__logger.warning(f"Error when trying to turn {geyser_bathroom.name} back on, {e}")
-            #
-            #     _device = pool_pump
-            #     _usage = _device.get_usage(if_on=True)
-            #     _start = datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
-            #     _end = datetime.now().replace(hour=15, minute=30, second=0, microsecond=0)
-            #     if -power_to_drop > _usage and _start < datetime.now() < _end:
-            #         self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
-            #         power_to_drop += _usage
-            #         _device.startup()
+        # if power_to_drop > 0:
+        #
+        #     _device = geyser_kitchen
+        #     _usage = _device.get_usage()
+        #     if power_to_drop > _usage:
+        #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
+        #         power_to_drop -= _usage
+        #         _device.shutdown()
+        #
+        #     _device = geyser_bathroom
+        #     _usage = _device.get_usage()
+        #     if power_to_drop > _usage:
+        #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
+        #         power_to_drop -= _usage
+        #         _device.shutdown()
+        #
+        #     _device = pool_pump
+        #     _usage = _device.get_usage()
+        #     if power_to_drop > _usage:
+        #         self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
+        #         power_to_drop -= _usage
+        #         _device.shutdown()
+        #
+        # else:
+        #
+        #     _device = geyser_kitchen
+        #     _usage = _device.get_usage(if_on=True)
+        #     if -power_to_drop > _usage:
+        #         self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
+        #         power_to_drop += _usage
+        #         _device.startup()
+        #
+        #     try:
+        #
+        #         _device = geyser_bathroom
+        #         _usage = _device.get_usage(if_on=True)
+        #         _temp = float(_device.get('obj').get('params').get("currentTemperature"))
+        #         if -power_to_drop > _usage and _temp < 44.5:
+        #             self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
+        #             power_to_drop += _usage
+        #             _device.startup()
+        #     except Exception as e:
+        #         self._Task__logger.warning(f"Error when trying to turn {geyser_bathroom.name} back on, {e}")
+        #
+        #     _device = pool_pump
+        #     _usage = _device.get_usage(if_on=True)
+        #     _start = datetime.now().replace(hour=8, minute=30, second=0, microsecond=0)
+        #     _end = datetime.now().replace(hour=15, minute=30, second=0, microsecond=0)
+        #     if -power_to_drop > _usage and _start < datetime.now() < _end:
+        #         self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
+        #         power_to_drop += _usage
+        #         _device.startup()
