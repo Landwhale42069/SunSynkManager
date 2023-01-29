@@ -75,19 +75,23 @@ class DryerWatchdogTask(Task):
                 self._Task__logger.info(f'Turning {dryer} on')
                 dryer.on()
 
-        display_value = f"{round((self.loadshedding_status or {}).get('start') or 0, 2)} hours" if round((self.loadshedding_status or {}).get('start') or 0, 2) != 0 else "Unknown"
+        display_value = self.loadshedding_ends.get('start')
+        display_value = "Currently loadshedding" if display_value == 0 else display_value
+        display_value = f"{round(display_value, 2)} Hours" if display_value is not None else display_value
+        display_value = "No Detected loadshedding" if display_value is None else display_value
+
         self.outputs = {
             'gridStatus': {
                 'type': 'SimpleDisplay',
                 'content': {
                     'title': 'Grid Status',
-                    'value': grid_power,
+                    'value': "On" if grid_power else "Off",
                 }
             },
             'NextLoadshedding': {
                 'type': 'SimpleDisplay',
                 'content': {
-                    'title': 'Loadshedding starts in: (hrs)',
+                    'title': 'Loadshedding starts in',
                     'value': display_value,
                 }
             }
