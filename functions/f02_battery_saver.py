@@ -20,6 +20,7 @@ class BatterySaverTask(Task):
 
         self.__sample_buffer_size = 10
         self.__sample_buffer = [0] * self.__sample_buffer_size
+        self.__sample_taken_dates = [datetime.now().strftime('%H:%M:%S')] * self.__sample_buffer_size
         self.__trigger_count = self.config__trigger_every
         self.additional_attributes = [
             'config__sample_buffer_size'
@@ -58,6 +59,10 @@ class BatterySaverTask(Task):
                 'type': 'Chart',
                 'name': 'Prediction Plot',
                 'content': {
+                    'title': {
+                        'text': "Buffer",
+                        'align': 'centre',
+                    },
                     'chart': {
                         'type': 'line',
                         'toolbar': {
@@ -72,7 +77,7 @@ class BatterySaverTask(Task):
                         'data': self.__sample_buffer
                     }],
                     'xaxis': {
-                        'categories': [-self.sample_buffer_size+i for i in range(self.sample_buffer_size)]
+                        'categories': self.__sample_taken_dates
                     }
                 }
             },
@@ -92,8 +97,10 @@ class BatterySaverTask(Task):
         difference = self.sample_buffer_size - new_sample_buffer_size
         if difference > 0:
             self.__sample_buffer = self.__sample_buffer[difference::]
+            self.__sample_taken_dates = self.__sample_taken_dates[difference::]
         elif difference < 0:
             self.__sample_buffer = [0] * abs(difference) + self.__sample_buffer
+            self.__sample_taken_dates = [datetime.now().strftime('%H:%M:%S')] * abs(difference) + self.__sample_taken_dates
 
         self.__sample_buffer_size = new_sample_buffer_size
 
@@ -109,6 +116,8 @@ class BatterySaverTask(Task):
         # Buffer battery power history
         self.__sample_buffer.append(battery_power.get_value())
         self.__sample_buffer.pop(0)
+        self.__sample_taken_dates.append(datetime.now().strftime('%H:%M:%S'))
+        self.__sample_taken_dates.pop(0)
 
         __trigger_count = self.config__trigger_every
 
@@ -116,8 +125,7 @@ class BatterySaverTask(Task):
         average_battery_power = sum(self.__sample_buffer) / len(self.__sample_buffer)
         power_left = (current_percent / 100) * self.config__battery_Wh_capacity
 
-        expected_percentage_left = ((
-                                                power_left - average_battery_power * self.config__projected_duration) / self.config__battery_Wh_capacity) * 100
+        expected_percentage_left = ((power_left - average_battery_power * self.config__projected_duration) / self.config__battery_Wh_capacity) * 100
 
         self._Task__logger.debug(f"\tCurrent       | {round(current_percent, 2):>20} %")
         self._Task__logger.debug(f"\tAverage usage | {round(average_battery_power, 2):>20}")
@@ -146,10 +154,14 @@ class BatterySaverTask(Task):
                 'title': 'Will try to drop',
                 'value': f"{round(power_to_drop, 2)} W",
             }
+
         self.outputs['predictionPlot']['content']['series'][0] = {
             'name': 'Battery Power',
             'data': self.__sample_buffer
         }
+        self.outputs['predictionPlot']['content']['xaxis']['categories'] = self.__sample_taken_dates
+
+        print(self.outputs)
 
         # if power_to_drop > 0:
         #

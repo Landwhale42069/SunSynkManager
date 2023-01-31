@@ -14,6 +14,9 @@ class DryerWatchdogTask(Task):
         self.loadshedding_ends = None
         self.loadshedding_status = None
 
+        self.config__minutes_before = 3
+        self.config__minutes_after = 60
+
         self.outputs = {
             'gridStatus': {
                 'type': 'SimpleDisplay',
@@ -43,8 +46,8 @@ class DryerWatchdogTask(Task):
         self._Task__logger.info(f"Next loadshedding schedule: {self.loadshedding_status}")
         currently_loadshedding = False
         if self.loadshedding_status:
-            ls_window_start = self.loadshedding_status['_start'] - timedelta(minutes=3)
-            ls_window_end = self.loadshedding_status['_start'] + timedelta(minutes=60)
+            ls_window_start = self.loadshedding_status['_start'] - timedelta(minutes=self.config__minutes_before)
+            ls_window_end = self.loadshedding_status['_start'] + timedelta(minutes=self.config__minutes_after)
             currently_loadshedding = ls_window_start < datetime.now() < ls_window_end
 
             if currently_loadshedding and not self.loadshedding_ends:
@@ -75,7 +78,7 @@ class DryerWatchdogTask(Task):
                 self._Task__logger.info(f'Turning {dryer} on')
                 dryer.on()
 
-        display_value = self.loadshedding_ends.get('start') if self.loadshedding_ends is not None else None
+        display_value = self.loadshedding_status.get('start') if self.loadshedding_status is not None else None
         display_value = "Currently loadshedding" if display_value == 0 else display_value
         display_value = f"{round(display_value, 2)} Hours" if display_value is not None else display_value
         display_value = "No Detected loadshedding" if display_value is None else display_value
