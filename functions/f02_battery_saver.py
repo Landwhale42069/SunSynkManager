@@ -78,6 +78,10 @@ class BatterySaverTask(Task):
                     }],
                     'xaxis': {
                         'categories': self.__sample_taken_dates
+                    },
+                    'yaxis': {
+                        'min': -5000,
+                        'max': 5000,
                     }
                 }
             },
@@ -160,8 +164,6 @@ class BatterySaverTask(Task):
             'data': self.__sample_buffer
         }
         self.outputs['predictionPlot']['content']['xaxis']['categories'] = self.__sample_taken_dates
-
-        print(self.outputs)
 
         # if power_to_drop > 0:
         #
