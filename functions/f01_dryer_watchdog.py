@@ -79,9 +79,11 @@ class DryerWatchdogTask(Task):
                 dryer.on()
 
         display_value = self.loadshedding_status.get('start') if self.loadshedding_status is not None else None
-        display_value = "Currently loadshedding" if display_value == 0 else display_value
         display_value = f"{round(display_value, 2)} Hours" if display_value is not None else display_value
+        display_value = "Currently loadshedding" if display_value == '0 Hours' else display_value
         display_value = "No Detected loadshedding" if display_value is None else display_value
+
+        self._Task__logger.info(f"Grid power, {display_value}; Display value, {display_value}")
 
         self.outputs = {
             'gridStatus': {

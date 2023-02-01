@@ -2,6 +2,7 @@ from threading import Timer
 from libraries import Logger
 import random
 
+
 class Task:
     task_id_counter = 0
 
@@ -45,7 +46,9 @@ class Task:
             self.logic()
         except Exception as e:
             self.config__run = False
-            raise e
+            error_message = f"{self.__class__.__name__} failed, {e}"
+            self.__logger.error(error_message)
+            raise Exception(error_message)
 
     def get_output(self):
         return self.outputs

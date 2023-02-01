@@ -76,7 +76,6 @@ class DeviceManager:
         if 'error' in response:
             raise Exception(f"Could not log into eWeLink: ({request.status_code}) {response}")
 
-        self.logger.debug(f"eWeLink API responded with: {request.status_code}")
         self.bearer_token = response['at']
         self.user_apikey = response['user']['apikey']
         self.headers.update({'Authorization': 'Bearer ' + self.bearer_token})
@@ -125,7 +124,6 @@ class DeviceManager:
             self.devices[device_obj.get('deviceid')] = device_obj
 
     def refresh_loop(self):
-        self.logger.info(f"Refreshing all devices")
         if self.run:
             t = Timer(10, self.refresh_loop, []).start()
 
@@ -133,7 +131,7 @@ class DeviceManager:
             if self.run:
                 self.hard_refresh()
         except Exception as e:
-            self.logger.warning(f"The refresh loop failed here, {e}")
+            self.logger.error(f"The refresh loop failed, {e}")
             self.run = False
             time.sleep(10)
 
@@ -148,7 +146,6 @@ class DeviceManager:
 
         for device in self.refresh_list.keys():
             self.hard_reload_device(device)
-            self.logger.info(f"{device}, hard refresh")
 
     def refresh(self):
         if self.dev_mode:
@@ -165,7 +162,6 @@ class DeviceManager:
         if self.dev_mode:
             return
 
-        self.logger.debug(f"Getting parameters of {self.devices[device_id]['name']} ({device_id})")
         params = {
             "deviceid": device_id,
             "lang": 'en',
@@ -295,7 +291,7 @@ class Device:
         try:
             self.set_switch('on', outlet)
         except Exception as e:
-            self.logger.warning(f"\tFailed to turn switch on {e}, refreshing login and seeing if that fixes it")
+            self.logger.error(f"\tFailed to turn switch on {e}, refreshing login and seeing if that fixes it")
             self.device_manager.login()
             self.set_switch('on', outlet)
 
@@ -303,7 +299,7 @@ class Device:
         try:
             self.set_switch('off', outlet)
         except Exception as e:
-            self.logger.warning(f"\tFailed to turn switch off {e}, refreshing login and seeing if that fixes it")
+            self.logger.error(f"\tFailed to turn switch off {e}, refreshing login and seeing if that fixes it")
             self.device_manager.login()
             self.set_switch('off', outlet)
 
