@@ -164,9 +164,27 @@ class WebAPI:
                     'error': f'Invalid taskId, {task_id}'
                 }
 
-            self.logger.debug(f'Getting Task {task_id}\'s output')
             output = task[0].get_output()
             return output
+
+        @self.app.route("/api/task/start")
+        def task_output():
+            task_id = request.args.get('taskId')
+
+            if task_id is None:
+                return {
+                    'error': 'taskId is required'
+                }
+            task = [self.info['tasks'][_task] for _task in self.info['tasks'] if self.info['tasks'][_task].task_id == int(task_id)]
+            if len(task) != 1:
+                return {
+                    'error': f'Invalid taskId, {task_id}'
+                }
+
+            task[0].start()
+            return {
+                'success': True
+            }
 
         # Host track data
         @self.app.route("/api/logs")

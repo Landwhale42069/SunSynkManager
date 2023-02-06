@@ -1,16 +1,8 @@
-from threading import Timer
+from libraries import Solar, Logger
+from datetime import datetime
 
+Solar.Predictor.logger = Logger.Logger('SunPredictor')
+a = Solar.Predictor()
 
-class Test:
-    def __init__(self):
-        self.name = 'Marco'
-
-
-def loop(a):
-    t = Timer(2, loop, [a]).start()
-    print(a.name)
-
-
-marco = Test()
-loop(marco)
-print()
+a.record_sample(22)
+...

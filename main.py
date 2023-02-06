@@ -1,7 +1,7 @@
-from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface
+from libraries import Logger, eWeLink, Inverter, Loadshedding, Interface, Solar
 from functions import f01_dryer_watchdog, f02_battery_saver
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def main():
@@ -10,8 +10,6 @@ def main():
     Inverter.Register.logger = Logger.Logger('Inverter')
     Loadshedding.Tracker.logger = Logger.Logger('Loadshedding')
     Interface.WebAPI.logger = Logger.Logger('Interface')
-
-    loadshedding = Loadshedding.Tracker("schedule.csv")
 
     # Define devices
     device_manager = eWeLink.DeviceManager()
@@ -44,6 +42,14 @@ def main():
     pv2_power = Inverter.Register(187, "PV2 power", -1, "Watt")
     grid_status = Inverter.Register(194, "Grid Connected Status")
 
+    # Helpers
+    loadshedding = Loadshedding.Tracker("schedule.csv")
+
+    Solar.Predictor.logger = Logger.Logger('SolarPredictor')
+    Solar.Predictor.battery_register = battery_soc
+    Solar.Predictor.pv_registers = [pv1_power, pv2_power]
+    solar_predictor = Solar.Predictor()
+
     argument_dict = {
         'loggers': {
             "eWeLink": eWeLink.DeviceManager.logger,
@@ -53,6 +59,7 @@ def main():
         },
         "helpers": {
             'loadshedding': loadshedding,
+            'solar_predictor': solar_predictor,
         },
         "devices": {
             'dryer': dryer,

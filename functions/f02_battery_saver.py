@@ -1,7 +1,5 @@
-from datetime import datetime
-from libraries import Logger
+from datetime import datetime, timedelta
 from libraries.Schedular import Task
-import random
 
 
 class BatterySaverTask(Task):
@@ -30,8 +28,22 @@ class BatterySaverTask(Task):
             'currentBattery': {
                 'type': 'SimpleDisplay',
                 'content': {
-                    'title': 'Current battery (%)',
+                    'title': 'Current battery',
                     'value': 100,
+                }
+            },
+            'solarPredictionMax': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Prediction (Max)',
+                    'value': 0,
+                }
+            },
+            'solarPredictionMoving': {
+                'type': 'SimpleDisplay',
+                'content': {
+                    'title': 'Prediction (Moving)',
+                    'value': 0,
                 }
             },
             'averageUsage': {
@@ -113,6 +125,8 @@ class BatterySaverTask(Task):
         battery_soc = self.__arguments['registers']['battery_soc']
         battery_power = self.__arguments['registers']['battery_power']
 
+        solar_predictor = self.__arguments['helpers']['solar_predictor']
+
         geyser_kitchen = self.__arguments['devices']['geyser_kitchen']
         geyser_bathroom = self.__arguments['devices']['geyser_bathroom']
         pool_pump = self.__arguments['devices']['pool_pump']
@@ -141,6 +155,17 @@ class BatterySaverTask(Task):
                     1 / self.config__projected_duration) * self.config__factor
 
         self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
+
+        try:
+            self.outputs['solarPredictionMax']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration)), 2)} W"
+        except Exception as e:
+            self.outputs['solarPredictionMax']['content']['value'] = f"Fucking issue fuck"
+
+        try:
+            self.outputs['solarPredictionMoving']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration), method='max'), 2)} W"
+        except Exception as e:
+            self.outputs['solarPredictionMoving']['content']['value'] = f"Fucking issue fuck"
+
 
         self.outputs['currentBattery']['content'] = {
                 'title': 'Current battery',

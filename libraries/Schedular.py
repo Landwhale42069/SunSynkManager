@@ -47,6 +47,15 @@ class Task:
         except Exception as e:
             self.config__run = False
             error_message = f"{self.__class__.__name__} failed, {e}"
+            self.outputs = {
+                'error': {
+                    'type': 'SimpleDisplay',
+                    'content': {
+                        'title': 'Error',
+                        'value': str(e),
+                    }
+                }
+            }
             self.__logger.error(error_message)
             raise Exception(error_message)
 
