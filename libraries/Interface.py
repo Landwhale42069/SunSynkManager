@@ -168,7 +168,7 @@ class WebAPI:
             return output
 
         @self.app.route("/api/task/start")
-        def task_output():
+        def task_start():
             task_id = request.args.get('taskId')
 
             if task_id is None:
