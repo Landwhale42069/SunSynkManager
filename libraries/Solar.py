@@ -148,7 +148,8 @@ class Model:
             if nearest[0] is None or difference < nearest[1]:
                 nearest = (_sample, difference)
 
-        self.samples[self.samples.index(nearest[0])]['value'] = sample
+        if sample > self.samples[self.samples.index(nearest[0])]['value']:
+            self.samples[self.samples.index(nearest[0])]['value'] = sample
 
     def get_model(self):
         return {
