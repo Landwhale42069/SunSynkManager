@@ -18,7 +18,6 @@ class Predictor:
             self.logger.info(f"Data file available, importing...")
             with open('data/Predictor.json', 'r') as f:
                 data_import = json.load(f)
-                self.logger.debug(f"\tData: {data_import}")
                 self.BaseModel = Model().from_json(data_import['BaseModel'])
                 self.MaxModel = Model().from_json(data_import['MaxModel'])
                 self.MovingModel = [Model().from_json(_data) for _data in data_import['MovingModel']]
@@ -149,8 +148,7 @@ class Model:
             if nearest[0] is None or difference < nearest[1]:
                 nearest = (_sample, difference)
 
-        self.samples.pop(self.samples.index(nearest[0]))
-        self.add_sample(sample, date)
+        self.samples[self.samples.index(nearest[0])]['value'] = sample
 
     def get_model(self):
         return {

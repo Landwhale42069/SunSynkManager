@@ -216,8 +216,8 @@ class BatterySaverTask(Task):
 
         self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
-        self.outputs['solarPredictionMax']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration)), 2)} W"
-        self.outputs['solarPredictionMoving']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration), method='max'), 2)} W"
+        self.outputs['solarPredictionMax']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration), method='max'), 2)} W"
+        self.outputs['solarPredictionMoving']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration)), 2)} W"
 
         self.outputs['currentBattery']['content'] = {
                 'title': 'Current battery',
