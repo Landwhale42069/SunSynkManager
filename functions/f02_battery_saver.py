@@ -67,12 +67,12 @@ class BatterySaverTask(Task):
                     'value': 0,
                 }
             },
-            'predictionPlot': {
+            'sampleBuffer': {
                 'type': 'Chart',
-                'name': 'Prediction Plot',
+                'name': 'Sample Buffer',
                 'content': {
                     'title': {
-                        'text': "Buffer",
+                        'text': "Sample Buffer",
                         'align': 'centre',
                     },
                     'chart': {
@@ -94,6 +94,66 @@ class BatterySaverTask(Task):
                     'yaxis': {
                         'min': -5000,
                         'max': 5000,
+                    }
+                }
+            },
+            'solarPredictorMax': {
+                'type': 'Chart',
+                'name': 'Max Predictor',
+                'content': {
+                    'title': {
+                        'text': "Max Predictor",
+                        'align': 'centre',
+                    },
+                    'chart': {
+                        'type': 'line',
+                        'toolbar': {
+                            'show': False,
+                        },
+                        'animations': {
+                            'enabled': False,
+                        }
+                    },
+                    'series': [{
+                        'name': 'Battery Power',
+                        'data': [55]
+                    }],
+                    'xaxis': {
+                        'categories': [10]
+                    },
+                    'yaxis': {
+                        'min': 0,
+                        'max': 10000,
+                    }
+                }
+            },
+            'solarPredictorMoving': {
+                'type': 'Chart',
+                'name': 'Moving Predictor',
+                'content': {
+                    'title': {
+                        'text': "Moving Predictor",
+                        'align': 'centre',
+                    },
+                    'chart': {
+                        'type': 'line',
+                        'toolbar': {
+                            'show': False,
+                        },
+                        'animations': {
+                            'enabled': False,
+                        }
+                    },
+                    'series': [{
+                        'name': 'Battery Power',
+                        'data': self.__sample_buffer
+                    }],
+                    'xaxis': {
+                        'categories': self.__sample_taken_dates
+                    },
+                    'yaxis': {
+                        'min': 0,
+                        'max': 10000,
                     }
                 }
             },
@@ -156,16 +216,8 @@ class BatterySaverTask(Task):
 
         self._Task__logger.info(f"Going to try to drop {round(power_to_drop, 2)} W")
 
-        try:
-            self.outputs['solarPredictionMax']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration)), 2)} W"
-        except Exception as e:
-            self.outputs['solarPredictionMax']['content']['value'] = f"Fucking issue fuck"
-
-        try:
-            self.outputs['solarPredictionMoving']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration), method='max'), 2)} W"
-        except Exception as e:
-            self.outputs['solarPredictionMoving']['content']['value'] = f"Fucking issue fuck"
-
+        self.outputs['solarPredictionMax']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration)), 2)} W"
+        self.outputs['solarPredictionMoving']['content']['value'] = f"{round(solar_predictor.get(datetime.now() + timedelta(hours=self.config__projected_duration), method='max'), 2)} W"
 
         self.outputs['currentBattery']['content'] = {
                 'title': 'Current battery',
@@ -184,11 +236,27 @@ class BatterySaverTask(Task):
                 'value': f"{round(power_to_drop, 2)} W",
             }
 
-        self.outputs['predictionPlot']['content']['series'][0] = {
+        self.outputs['sampleBuffer']['content']['series'][0] = {
             'name': 'Battery Power',
             'data': self.__sample_buffer
         }
-        self.outputs['predictionPlot']['content']['xaxis']['categories'] = self.__sample_taken_dates
+        self.outputs['sampleBuffer']['content']['xaxis']['categories'] = self.__sample_taken_dates
+
+        # MAX
+        max_data = solar_predictor.MaxModel.get_model()
+        self.outputs['solarPredictorMax']['content']['series'][0] = {
+            'name': 'Max Solar',
+            'data': max_data['y']
+        }
+        self.outputs['solarPredictorMax']['content']['xaxis']['categories'] = [x/3600 for x in max_data['x']]
+
+        # MOVING
+        moving_data = solar_predictor.MovingModel[-1].get_model()
+        self.outputs['solarPredictorMoving']['content']['series'][0] = {
+            'name': 'Moving Solar',
+            'data': moving_data['y']
+        }
+        self.outputs['solarPredictorMoving']['content']['xaxis']['categories'] = [x/3600 for x in moving_data['x']]
 
         # if power_to_drop > 0:
         #
