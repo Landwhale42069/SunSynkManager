@@ -271,7 +271,7 @@ class BatterySaverTask(Task):
 
                 _device = geyser_bathroom
                 _usage = _device.get_usage(if_on=True)
-                _temp = float(_device.get('obj').get('params').get("currentTemperature"))
+                _temp = float(_device.obj.get('params').get("currentTemperature"))
                 if -power_to_drop > _usage and _temp < 44.5 and _device.lock == "f02":
                     self._Task__logger.debug(f"{_device.name} will use {_usage} W, turning on")
                     power_to_drop += _usage
