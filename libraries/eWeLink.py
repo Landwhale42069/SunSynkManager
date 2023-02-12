@@ -226,6 +226,8 @@ class Device:
         self.expected_usage = 0
         self.expected_activity = None
 
+        self.lock = None
+
         self.logger.info(f"Successfully created {self.__str__()}")
 
     def get_usage(self, if_on=False):

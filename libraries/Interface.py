@@ -72,6 +72,7 @@ class WebAPI:
                         if hasattr(device, 'device_id'):
                             if device.device_id == device_id:
                                 device.toggle(outlet)
+                                device.lock = None
                                 break
 
                     return {
