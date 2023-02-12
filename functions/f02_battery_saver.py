@@ -236,7 +236,7 @@ class BatterySaverTask(Task):
         if power_to_drop > 0:
             _device = geyser_kitchen
             _usage = _device.get_usage()
-            if power_to_drop > _usage and power_to_drop != 0 and _device.lock is None:
+            if power_to_drop > _usage and _usage != 0 and _device.lock is None:
                 self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
                 power_to_drop -= _usage
                 _device.shutdown()
@@ -244,7 +244,7 @@ class BatterySaverTask(Task):
 
             _device = geyser_bathroom
             _usage = _device.get_usage()
-            if power_to_drop > _usage and power_to_drop != 0 and _device.lock is None:
+            if power_to_drop > _usage and _usage != 0 and _device.lock is None:
                 self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
                 power_to_drop -= _usage
                 _device.shutdown()
@@ -252,7 +252,7 @@ class BatterySaverTask(Task):
 
             _device = pool_pump
             _usage = _device.get_usage()
-            if power_to_drop > _usage and power_to_drop != 0 and _device.lock is None:
+            if power_to_drop > _usage and _usage != 0 and _device.lock is None:
                 self._Task__logger.debug(f"{_device.name} is using {_usage} W, turning off")
                 power_to_drop -= _usage
                 _device.shutdown()
